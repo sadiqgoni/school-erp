@@ -1,0 +1,665 @@
+@import "../../../vendor/filament/filament/resources/css/theme.css";
+
+@source '../../../app/Filament/**/*';
+@source '../../../resources/views/filament/**/*';
+@source '../../../resources/views/vendor/filament/**/*';
+
+:root {
+    --sidebar-width: 17rem;
+    --font-family: "Inter", "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+    --school-primary: #0f766e;
+    --school-primary-dark: #115e59;
+    --school-primary-light: #14b8a6;
+    --school-accent: #f59e0b;
+    --school-surface: #ffffff;
+    --school-surface-soft: #f8fafc;
+    --school-border: rgba(15, 118, 110, 0.12);
+    --school-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+}
+
+body {
+    background:
+        radial-gradient(circle at top left, rgba(20, 184, 166, 0.12), transparent 22%),
+        radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.08), transparent 18%),
+        linear-gradient(180deg, #cceee8 0%, #eaf7f5 28%, #f6fbfb 60%, #edf6ff 100%) !important;
+    min-height: 100vh;
+}
+
+.dark body {
+    background:
+        radial-gradient(circle at top left, rgba(20, 184, 166, 0.1), transparent 25%),
+        linear-gradient(180deg, #0f172a 0%, #111827 52%, #0f172a 100%) !important;
+}
+
+.fi-main,
+.fi-simple-main {
+    font-family: var(--font-family);
+}
+
+.fi-sidebar {
+    background: linear-gradient(180deg, #0f766e 0%, #115e59 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 8px 0 32px rgba(15, 23, 42, 0.18);
+}
+
+.fi-sidebar,
+.fi-sidebar * {
+    color: #f8fafc;
+}
+
+.fi-sidebar-header {
+    margin: 1rem;
+    border-radius: 1rem;
+    padding: 0.85rem 1rem;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(12px);
+}
+
+.fi-tenant-menu-trigger {
+    border-radius: 0.9rem;
+    padding: 0.65rem 0.75rem;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fi-tenant-menu-trigger:hover,
+.fi-tenant-menu-trigger[aria-expanded="true"] {
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.fi-sidebar .fi-tenant-menu .fi-dropdown-panel {
+    background: #ffffff !important;
+}
+
+.fi-sidebar .fi-tenant-menu .fi-dropdown-panel,
+.fi-sidebar .fi-tenant-menu .fi-dropdown-panel * {
+    color: #0f172a !important;
+}
+
+.fi-sidebar .fi-tenant-menu .fi-dropdown-list-item {
+    border-radius: 0.7rem;
+    color: #334155 !important;
+}
+
+.fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:hover,
+.fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:focus-visible {
+    background: rgba(20, 184, 166, 0.16) !important;
+    color: #0f172a !important;
+}
+
+.fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:hover *,
+.fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:focus-visible * {
+    color: #0f172a !important;
+}
+
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-panel {
+    background: #0f172a !important;
+}
+
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-panel,
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-panel * {
+    color: #e2e8f0 !important;
+}
+
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:hover,
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:focus-visible {
+    background: rgba(20, 184, 166, 0.26) !important;
+    color: #ffffff !important;
+}
+
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:hover *,
+.dark .fi-sidebar .fi-tenant-menu .fi-dropdown-list-item:focus-visible * {
+    color: #ffffff !important;
+}
+
+.fi-sidebar-nav {
+    margin: 0.75rem;
+}
+
+.fi-sidebar-group-label {
+    color: rgba(255, 255, 255, 0.82) !important;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.fi-sidebar-item {
+    margin: 0.2rem 0;
+}
+
+.fi-sidebar-item > a {
+    border-radius: 0.9rem;
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.25s ease;
+}
+
+.fi-sidebar-item > a:hover,
+.fi-sidebar-item.fi-active > a,
+.fi-sidebar-item.fi-sidebar-item-active > a {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff !important;
+    transform: translateX(4px);
+}
+
+.fi-sidebar-item-icon,
+.fi-sidebar-item-label {
+    color: rgba(255, 255, 255, 0.92) !important;
+    transition: color 0.25s ease;
+}
+
+.fi-sidebar-item:hover .fi-sidebar-item-icon,
+.fi-sidebar-item:hover .fi-sidebar-item-label,
+.fi-sidebar-item.fi-active .fi-sidebar-item-icon,
+.fi-sidebar-item.fi-active .fi-sidebar-item-label,
+.fi-sidebar-item.fi-sidebar-item-active .fi-sidebar-item-icon,
+.fi-sidebar-item.fi-sidebar-item-active .fi-sidebar-item-label {
+    color: #ffffff !important;
+}
+
+.fi-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 999px;
+}
+
+.fi-topbar {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(15, 118, 110, 0.08);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.04);
+}
+
+.dark .fi-topbar {
+    background: rgba(17, 24, 39, 0.88);
+    border-bottom-color: rgba(148, 163, 184, 0.12);
+}
+
+.fi-page {
+    gap: 1.25rem;
+}
+
+.fi-section,
+.fi-card,
+.fi-widget,
+.fi-ta-ctn,
+.fi-modal-window,
+.fi-simple-layout .fi-card,
+.fi-fo-component-ctn {
+    border-radius: 1rem;
+    border: 1px solid var(--school-border);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: var(--school-shadow);
+}
+
+.dark .fi-section,
+.dark .fi-card,
+.dark .fi-widget,
+.dark .fi-ta-ctn,
+.dark .fi-modal-window,
+.dark .fi-simple-layout .fi-card,
+.dark .fi-fo-component-ctn {
+    background: rgba(17, 24, 39, 0.92);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+.fi-widget,
+.fi-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.fi-widget::before,
+.fi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--school-primary), var(--school-primary-light), var(--school-accent));
+    opacity: 0.95;
+}
+
+.fi-section-content,
+.fi-card,
+.fi-widget {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.fi-card:hover,
+.fi-widget:hover,
+.fi-ta-ctn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.1);
+}
+
+.fi-btn {
+    border-radius: 0.8rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.fi-btn:not(.fi-color-gray) {
+    box-shadow: 0 10px 22px rgba(15, 118, 110, 0.18);
+}
+
+.fi-btn:hover {
+    transform: translateY(-1px);
+}
+
+.fi-btn.fi-color-primary {
+    background: linear-gradient(135deg, var(--school-primary), var(--school-primary-light));
+    border-color: transparent;
+    color: #ffffff;
+}
+
+.fi-btn.fi-color-primary:hover {
+    box-shadow: 0 14px 28px rgba(15, 118, 110, 0.24);
+}
+
+.fi-input,
+.fi-select-input,
+.fi-textarea,
+.fi-fo-date-time-picker,
+.choices__inner {
+    border-radius: 0.85rem !important;
+}
+
+.fi-fo-field-wrp-label span,
+.fi-section-header-heading,
+.fi-ta-header-heading {
+    letter-spacing: 0;
+}
+
+.fi-fo-tabs,
+.fi-tabs {
+    border-radius: 0.95rem;
+}
+
+.fi-tabs-item,
+.fi-fo-tabs-tab {
+    border-radius: 0.8rem;
+}
+
+.fi-tabs-item.fi-active,
+.fi-fo-tabs-tab.fi-active {
+    background: rgba(20, 184, 166, 0.12);
+    color: rgb(15 118 110) !important;
+}
+
+.fi-badge {
+    border-radius: 999px;
+}
+
+.fi-ta-table {
+    overflow: hidden;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+}
+
+.fi-ta-table thead th {
+    background: linear-gradient(180deg, #0f766e 0%, #115e59 100%) !important;
+    color: #ffffff !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16) !important;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dark .fi-ta-table thead th {
+    background: linear-gradient(180deg, #115e59 0%, #134e4a 100%) !important;
+}
+
+.fi-ta-row {
+    transition: background-color 0.2s ease;
+}
+
+.fi-ta-table td {
+    border-bottom: 1px solid rgba(15, 118, 110, 0.08);
+}
+
+.fi-ta-table tbody tr:nth-child(even) td {
+    background: rgba(15, 118, 110, 0.025);
+}
+
+.fi-ta-row:hover {
+    background: rgba(20, 184, 166, 0.08);
+}
+
+.fi-ta-row:hover td {
+    background: rgba(20, 184, 166, 0.08);
+}
+
+.fi-ta-header,
+.fi-ta-filters,
+.fi-ta-actions {
+    border-color: rgba(15, 118, 110, 0.1);
+}
+
+.fi-dropdown-panel,
+.fi-ta-filters-dropdown-panel,
+.fi-user-menu {
+    border-radius: 0.9rem;
+    border: 1px solid var(--school-border);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+}
+
+.fi-simple-header-heading {
+    font-size: 1.9rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--school-primary), var(--school-primary-light));
+    color: transparent;
+    background-clip: text;
+}
+
+.fi-simple-header-subheading {
+    color: rgb(71 85 105);
+}
+
+.dark .fi-simple-header-subheading {
+    color: rgb(148 163 184);
+}
+
+.fi-simple-main-ctn {
+    position: relative;
+}
+
+.fi-simple-main-ctn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 26%),
+        radial-gradient(circle at bottom left, rgba(20, 184, 166, 0.12), transparent 28%);
+    pointer-events: none;
+}
+
+.fi-header-heading {
+    background: linear-gradient(135deg, var(--school-primary), var(--school-primary-light));
+    color: transparent;
+    background-clip: text;
+    font-weight: 700;
+}
+
+.fi-header-subheading {
+    color: rgb(71 85 105);
+}
+
+.dark .fi-header-subheading {
+    color: rgb(148 163 184);
+}
+
+.school-dice-hero {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.school-dice-hero__intro {
+    display: grid;
+    gap: 1rem;
+}
+
+.school-dice-hero__masthead {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.school-dice-hero__logo {
+    display: grid;
+    place-items: center;
+    width: 4.5rem;
+    height: 4.5rem;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 3px solid rgba(15, 118, 110, 0.18);
+    background: rgba(15, 118, 110, 0.1);
+    color: rgb(15 118 110);
+    font-size: 1.6rem;
+    font-weight: 800;
+}
+
+.school-dice-hero__logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.school-dice-hero__eyebrow {
+    color: rgb(15 118 110);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.school-dice-hero__title {
+    color: #0f172a;
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.dark .school-dice-hero__title {
+    color: #f8fafc;
+}
+
+.school-dice-hero__subtitle {
+    margin-top: 0.45rem;
+    max-width: 62rem;
+    color: #475569;
+    font-size: 0.98rem;
+    line-height: 1.65;
+}
+
+.dark .school-dice-hero__subtitle {
+    color: #cbd5e1;
+}
+
+.school-dice-hero__code {
+    display: inline-flex;
+    margin-left: 0.4rem;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.1);
+    padding: 0.1rem 0.55rem;
+    color: rgb(15 118 110);
+    font-size: 0.76rem;
+    font-weight: 700;
+    vertical-align: middle;
+}
+
+.school-dice-hero__progress {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.school-dice-hero__progress-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    color: #475569;
+    font-size: 0.86rem;
+    font-weight: 600;
+}
+
+.dark .school-dice-hero__progress-meta {
+    color: #cbd5e1;
+}
+
+.school-dice-hero__progress-bar {
+    height: 0.65rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.1);
+}
+
+.school-dice-hero__progress-bar span {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--school-primary), var(--school-primary-light), var(--school-accent));
+}
+
+.school-dice-hero__content {
+    display: grid;
+    gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+    .school-dice-hero__content {
+        grid-template-columns: minmax(0, 1.7fr) minmax(18rem, 1fr);
+        align-items: start;
+    }
+}
+
+.school-dice-hero__actions {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 0.85rem;
+}
+
+@media (min-width: 768px) {
+    .school-dice-hero__actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.school-dice-hero__action {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(15, 118, 110, 0.1);
+    background: rgba(255, 255, 255, 0.75);
+    padding: 1rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.dark .school-dice-hero__action {
+    background: rgba(15, 23, 42, 0.45);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+.school-dice-hero__action:hover {
+    transform: translateY(-2px);
+    border-color: rgba(15, 118, 110, 0.24);
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.school-dice-hero__action-icon {
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex-shrink: 0;
+    border-radius: 0.85rem;
+    background: rgba(15, 118, 110, 0.12);
+    color: rgb(15 118 110);
+}
+
+.school-dice-hero__action-copy {
+    display: grid;
+    gap: 0.22rem;
+}
+
+.school-dice-hero__action-copy span {
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.dark .school-dice-hero__action-copy span {
+    color: #f8fafc;
+}
+
+.school-dice-hero__action-copy small {
+    color: #64748b;
+    font-size: 0.82rem;
+    line-height: 1.45;
+}
+
+.dark .school-dice-hero__action-copy small {
+    color: #94a3b8;
+}
+
+.school-dice-hero__checklist {
+    display: grid;
+    gap: 0.85rem;
+    border-radius: 0.95rem;
+    border: 1px solid rgba(15, 118, 110, 0.1);
+    background: linear-gradient(180deg, rgba(240, 253, 250, 0.95), rgba(255, 255, 255, 0.9));
+    padding: 1rem;
+}
+
+.dark .school-dice-hero__checklist {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.92));
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+.school-dice-hero__checklist-heading {
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.dark .school-dice-hero__checklist-heading {
+    color: #f8fafc;
+}
+
+.school-dice-hero__checklist-list {
+    display: grid;
+    gap: 0.85rem;
+}
+
+.school-dice-hero__check {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.school-dice-hero__check-icon {
+    display: grid;
+    place-items: center;
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+}
+
+.school-dice-hero__check-icon.is-done {
+    background: rgba(34, 197, 94, 0.14);
+    color: rgb(22 163 74);
+}
+
+.school-dice-hero__check-icon.is-pending {
+    background: rgba(245, 158, 11, 0.16);
+    color: rgb(217 119 6);
+}
+
+.school-dice-hero__check-copy {
+    display: grid;
+    gap: 0.12rem;
+}
+
+.school-dice-hero__check-copy span {
+    color: #0f172a;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.dark .school-dice-hero__check-copy span {
+    color: #f8fafc;
+}
+
+.school-dice-hero__check-copy small {
+    color: #64748b;
+    font-size: 0.79rem;
+    line-height: 1.45;
+}
+
+.dark .school-dice-hero__check-copy small {
+    color: #94a3b8;
+}

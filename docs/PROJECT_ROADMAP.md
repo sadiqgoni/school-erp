@@ -93,9 +93,25 @@ Start with single-database row-level tenancy:
 - [x] Install Filament.
 - [x] Add first project roadmap.
 - [x] Add initial School tenancy foundation.
-- [ ] Create platform admin user.
-- [ ] Enable Filament tenant switcher after first school/user seed is ready.
-- [ ] Add academic setup migrations and resources.
-- [ ] Add student and guardian resources.
-- [ ] Add staff and role resources.
+- [x] Create platform admin user.
+- [x] Add system account management and active-user middleware.
+- [x] Add academic setup migrations and resources.
+- [x] Add student and guardian resources.
+- [x] Add staff and role resources.
+- [x] Add student and staff attendance foundations.
+- [x] Add finance foundations for fees, invoices, payments, and expenses.
+- [x] Add exams and report-card foundations.
 - [ ] Review/OCR the PDF for hidden requirements.
+
+## Current Build Notes
+
+- `admin@example.com` / `password` is the seeded platform admin login for local development.
+- Academic setup now includes academic years, terms, classes, class sections, subjects, and class-subject assignments.
+- Demo data seeds one school, one academic year, three terms, three classes, two sections per class, three subjects, and nine class-subject assignments.
+- People setup now includes student profiles, guardian profiles, guardian-student links, and class enrollment records.
+- Staff setup now includes departments, staff roles, staff profiles, role assignments, and teaching assignments.
+- Attendance setup now includes class attendance sessions, student attendance records, and staff attendance records.
+- System setup now includes a branded Filament panel, ordered navigation groups, user/account management, and inactive-account middleware.
+- Finance setup now includes fee types, fee structures, student invoices, invoice items, fee payments/receipts, expense categories, and expenses.
+- Exams setup now includes exams, grade scales, assessment components, student scores, compiled results, and report cards.
+- Next implementation focus: communications and operations foundations for notices, SMS/email logs, reminders, visitor log, library, transport, and hostel, because the core academic/people/finance/exam spine is now in place.
