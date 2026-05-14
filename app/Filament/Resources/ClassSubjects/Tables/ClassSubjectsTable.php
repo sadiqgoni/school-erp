@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ClassSubjects\Tables;
 
+use App\Support\TeacherWorkspace;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -16,6 +17,19 @@ class ClassSubjectsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(function ($query) {
+                if (! TeacherWorkspace::isTeacher()) {
+                    return $query;
+                }
+
+                $formClassIds = TeacherWorkspace::formClassIds();
+
+                if ($formClassIds === []) {
+                    return $query->whereRaw('1 = 0');
+                }
+
+                return $query->whereIn('school_class_id', $formClassIds);
+            })
             ->columns([
                 TextColumn::make('school.name')
                     ->searchable()
@@ -37,9 +51,11 @@ class ClassSubjectsTable
                     ->numeric()
                     ->sortable(),
                 IconColumn::make('is_compulsory')
-                    ->boolean(),
+                    ->boolean()
+                    ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
                 IconColumn::make('is_active')
-                    ->boolean(),
+                    ->boolean()
+                    ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
             ])
             ->filters([
                 SelectFilter::make('school')
@@ -58,12 +74,13 @@ class ClassSubjectsTable
                     ->preload(),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                ]),
+                ])->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
             ]);
     }
 }

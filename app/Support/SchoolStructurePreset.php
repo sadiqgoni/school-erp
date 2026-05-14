@@ -4,6 +4,16 @@ namespace App\Support;
 
 class SchoolStructurePreset
 {
+    public static function defaultTemplatesForDivision(?string $division): array
+    {
+        return match ($division) {
+            'nursery' => ['nursery', 'kindergarten'],
+            'primary' => ['primary'],
+            'secondary' => ['secondary'],
+            default => [],
+        };
+    }
+
     public static function options(): array
     {
         return [
@@ -15,6 +25,15 @@ class SchoolStructurePreset
             'grade' => 'Grade',
             'cambridge' => 'Cambridge',
         ];
+    }
+
+    public static function optionsForDivision(?string $division): array
+    {
+        $templates = static::defaultTemplatesForDivision($division);
+
+        return $templates === []
+            ? static::options()
+            : collect(static::options())->only($templates)->all();
     }
 
     public static function defaults(array $templates): array

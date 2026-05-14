@@ -13,6 +13,20 @@ class AssessmentComponent extends Model
 {
     use HasFactory;
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $component): void {
+            if (blank($component->code)) {
+                $component->code = str($component->name)
+                    ->upper()
+                    ->replaceMatches('/[^A-Z0-9]+/', '_')
+                    ->trim('_')
+                    ->limit(40, '')
+                    ->toString() ?: 'COMPONENT';
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [

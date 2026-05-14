@@ -4,6 +4,16 @@ namespace App\Support;
 
 class SubjectPreset
 {
+    public static function defaultTemplatesForDivision(?string $division): array
+    {
+        return match ($division) {
+            'nursery' => ['nursery'],
+            'primary' => ['primary', 'common'],
+            'secondary' => ['junior_secondary', 'senior_secondary', 'common'],
+            default => [],
+        };
+    }
+
     public static function options(): array
     {
         return [
@@ -13,6 +23,15 @@ class SubjectPreset
             'senior_secondary' => 'Senior Secondary',
             'common' => 'Common/Core',
         ];
+    }
+
+    public static function optionsForDivision(?string $division): array
+    {
+        $templates = static::defaultTemplatesForDivision($division);
+
+        return $templates === []
+            ? static::options()
+            : collect(static::options())->only($templates)->all();
     }
 
     public static function defaults(array $templates): array

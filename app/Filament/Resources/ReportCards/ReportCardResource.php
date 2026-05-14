@@ -9,6 +9,7 @@ use App\Filament\Resources\ReportCards\Pages\ListReportCards;
 use App\Filament\Resources\ReportCards\Schemas\ReportCardForm;
 use App\Filament\Resources\ReportCards\Tables\ReportCardsTable;
 use App\Models\ReportCard;
+use App\Support\TeacherWorkspace;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -26,6 +27,16 @@ class ReportCardResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'Exams & Reports';
 
     protected static ?int $navigationSort = 60;
+
+    public static function getNavigationLabel(): string
+    {
+        return TeacherWorkspace::isTeacher() ? 'Class Results' : 'Report Cards';
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return TeacherWorkspace::isTeacher() ? 'Teacher Portal' : static::$navigationGroup;
+    }
 
     public static function form(Schema $schema): Schema
     {

@@ -1,8 +1,14 @@
 <x-filament-widgets::widget>
+    @once
+        <style>
+            .school-dice-hero__masthead.is-centered{flex-direction:column;align-items:center;text-align:center}.school-dice-hero__masthead.is-centered .school-dice-hero__subtitle{margin-left:auto;margin-right:auto}.school-dice-hero__section-name{display:inline-flex;margin-top:.65rem;border-radius:999px;background:rgba(37,99,235,.1);padding:.2rem .7rem;color:rgb(37 99 235);font-size:.78rem;font-weight:800}
+        </style>
+    @endonce
+
     <x-filament::section>
         <div class="school-dice-hero">
             <div class="school-dice-hero__intro">
-                <div class="school-dice-hero__masthead">
+                <div class="school-dice-hero__masthead is-centered">
                     <div class="school-dice-hero__logo">
                         @if ($logoUrl)
                             <img src="{{ $logoUrl }}" alt="{{ $schoolName }} logo">
@@ -15,12 +21,16 @@
                         <div class="school-dice-hero__eyebrow">School Dice Workspace</div>
 
                         <h2 class="school-dice-hero__title">
-                            Welcome, {{ $schoolName }}
+                            {{ $schoolName }}
 
                             @if ($schoolCode)
                                 <span class="school-dice-hero__code">{{ $schoolCode }}</span>
                             @endif
                         </h2>
+
+                        @if ($sectionName)
+                            <div class="school-dice-hero__section-name">{{ $sectionName }}</div>
+                        @endif
 
                         <p class="school-dice-hero__subtitle">
                             Manage admissions, staff, finance, attendance, exams, and reports from one school workspace.

@@ -5,7 +5,6 @@ namespace App\Providers\Filament;
 use App\Filament\Resources\Schools\SchoolResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Http\Middleware\EnsureActiveUser;
-use App\Http\Middleware\LogUserPageVisit;
 use App\Http\Middleware\RedirectSchoolUserFromAdmin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -68,7 +67,6 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                LogUserPageVisit::class,
             ])
             ->authMiddleware([
                 RedirectSchoolUserFromAdmin::class,

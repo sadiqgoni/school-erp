@@ -7,6 +7,7 @@ use App\Models\ClassSubject;
 use App\Models\SchoolClass;
 use App\Models\Staff;
 use App\Models\Subject;
+use App\Support\TeacherWorkspace;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
@@ -28,14 +29,19 @@ class ListClassSubjects extends ListRecords
                 ->label('Assign to classes')
                 ->icon('heroicon-o-link')
                 ->color('primary')
-                ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
-                ->modalHeading('Assign subjects to classes')
-                ->modalDescription('Select classes and subjects to create class subject entries in bulk.')
+                ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school' && (! TeacherWorkspace::isTeacher() || filled(TeacherWorkspace::formClassIds())))
+                ->modalHeading(fn (): string => TeacherWorkspace::isTeacher() ? 'Assign subjects to my class' : 'Assign subjects to classes')
+                ->modalDescription(fn (): string => TeacherWorkspace::isTeacher() ? 'Select from the classes where you are the form teacher.' : 'Select classes and subjects to create class subject entries in bulk.')
                 ->modalWidth('5xl')
                 ->schema([
                     CheckboxList::make('school_class_ids')
                         ->label('Classes')
-                        ->options(fn (): array => SchoolClass::query()->orderBy('level')->orderBy('name')->pluck('name', 'id')->all())
+                        ->options(fn (): array => SchoolClass::query()
+                            ->when(TeacherWorkspace::isTeacher(), fn ($query) => $query->whereIn('id', TeacherWorkspace::formClassIds()))
+                            ->orderBy('level')
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->all())
                         ->columns(2)
                         ->required(),
                     CheckboxList::make('subject_ids')
@@ -46,6 +52,7 @@ class ListClassSubjects extends ListRecords
                     Select::make('staff_id')
                         ->label('Subject teacher')
                         ->options(fn (): array => Staff::query()
+                            ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
                             ->where('staff_type', Staff::TYPE_TEACHING)
                             ->orderBy('last_name')
                             ->orderBy('first_name')
@@ -98,7 +105,8 @@ class ListClassSubjects extends ListRecords
                         ->body("Processed {$count} class subject assignments.")
                         ->send();
                 }),
-            CreateAction::make(),
+            CreateAction::make()
+                ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
         ];
     }
 }

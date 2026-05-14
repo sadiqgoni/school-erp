@@ -3,16 +3,22 @@
 namespace App\Models;
 
 use Filament\Facades\Filament;
+use Filament\Models\Contracts\HasAvatar;
+use Filament\Models\Contracts\HasName;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 #[Fillable([
+    'parent_school_id',
+    'division',
     'name',
     'code',
     'slug',
@@ -30,9 +36,21 @@ use Illuminate\Support\Str;
     'enabled_modules',
     'is_active',
 ])]
-class School extends Model
+class School extends Model implements HasAvatar, HasName
 {
     use HasFactory;
+
+    public const DIVISION_NURSERY = 'nursery';
+
+    public const DIVISION_PRIMARY = 'primary';
+
+    public const DIVISION_SECONDARY = 'secondary';
+
+    public const DIVISIONS = [
+        self::DIVISION_NURSERY => 'Nursery Section',
+        self::DIVISION_PRIMARY => 'Primary Section',
+        self::DIVISION_SECONDARY => 'Secondary Section',
+    ];
 
     protected static function booted(): void
     {
@@ -62,6 +80,16 @@ class School extends Model
         return $this->belongsToMany(User::class)
             ->withPivot(['role', 'is_primary'])
             ->withTimestamps();
+    }
+
+    public function parentSchool(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_school_id');
+    }
+
+    public function divisions(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_school_id');
     }
 
     public function academicYears(): HasMany
@@ -131,7 +159,37 @@ class School extends Model
 
     public function getFilamentName(): string
     {
-        return $this->name;
+        return $this->divisionLabel() ?? $this->name;
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        if (blank($this->logo_path)) {
+            return null;
+        }
+
+        if (str_starts_with($this->logo_path, 'http://') || str_starts_with($this->logo_path, 'https://')) {
+            return $this->logo_path;
+        }
+
+        return Storage::disk('public')->url($this->logo_path);
+    }
+
+    public function baseSchoolName(): string
+    {
+        if (! $this->parent_school_id) {
+            return $this->name;
+        }
+
+        return self::query()
+            ->withoutGlobalScopes()
+            ->whereKey($this->parent_school_id)
+            ->value('name') ?? $this->name;
+    }
+
+    public function divisionLabel(): ?string
+    {
+        return self::DIVISIONS[$this->division] ?? null;
     }
 
     protected function slug(): Attribute

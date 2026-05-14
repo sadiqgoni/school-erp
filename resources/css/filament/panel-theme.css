@@ -405,6 +405,17 @@ body {
     gap: 1rem;
 }
 
+.school-dice-hero__masthead.is-centered {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.school-dice-hero__masthead.is-centered .school-dice-hero__subtitle {
+    margin-left: auto;
+    margin-right: auto;
+}
+
 .school-dice-hero__logo {
     display: grid;
     place-items: center;
@@ -467,6 +478,17 @@ body {
     font-size: 0.76rem;
     font-weight: 700;
     vertical-align: middle;
+}
+
+.school-dice-hero__section-name {
+    display: inline-flex;
+    margin-top: 0.65rem;
+    border-radius: 999px;
+    background: rgba(37, 99, 235, 0.1);
+    padding: 0.2rem 0.7rem;
+    color: rgb(37 99 235);
+    font-size: 0.78rem;
+    font-weight: 800;
 }
 
 .school-dice-hero__progress {
@@ -662,4 +684,137 @@ body {
 
 .dark .school-dice-hero__check-copy small {
     color: #94a3b8;
+}
+
+.school-dashboard-summary {
+    display: grid;
+    gap: 2rem;
+}
+
+.school-dashboard-summary__topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid rgba(15, 118, 110, 0.1);
+    padding-bottom: 1rem;
+}
+
+.school-dashboard-summary__school {
+    color: #334155;
+    font-size: 0.98rem;
+    font-weight: 800;
+}
+
+.dark .school-dashboard-summary__school {
+    color: #f8fafc;
+}
+
+.school-dashboard-summary__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    color: #475569;
+    font-size: 0.92rem;
+    font-weight: 600;
+}
+
+.dark .school-dashboard-summary__meta {
+    color: #cbd5e1;
+}
+
+.school-dashboard-summary__section {
+    display: grid;
+    gap: 1rem;
+}
+
+.school-dashboard-summary__section header h2 {
+    color: #0f172a;
+    font-size: 1.18rem;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+.dark .school-dashboard-summary__section header h2 {
+    color: #f8fafc;
+}
+
+.school-dashboard-summary__section header p {
+    margin-top: 0.25rem;
+    color: #64748b;
+    font-size: 0.96rem;
+}
+
+.dark .school-dashboard-summary__section header p {
+    color: #94a3b8;
+}
+
+.school-dashboard-summary__grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+@media (min-width: 768px) {
+    .school-dashboard-summary__grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1280px) {
+    .school-dashboard-summary__grid--students {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+.school-dashboard-summary__card {
+    display: grid;
+    min-height: 10rem;
+    gap: 0.7rem;
+    align-content: center;
+    border-radius: 0.55rem;
+    border: 1px solid rgba(15, 118, 110, 0.12);
+    background: rgba(255, 255, 255, 0.82);
+    padding: 1.35rem;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+}
+
+.dark .school-dashboard-summary__card {
+    background: rgba(15, 23, 42, 0.45);
+    border-color: rgba(148, 163, 184, 0.16);
+}
+
+.school-dashboard-summary__label {
+    color: #5f6673;
+    font-size: 0.96rem;
+    font-weight: 700;
+}
+
+.dark .school-dashboard-summary__label {
+    color: #cbd5e1;
+}
+
+.school-dashboard-summary__card strong {
+    color: #020617;
+    font-size: clamp(2rem, 5vw, 2.55rem);
+    font-weight: 850;
+    line-height: 1;
+}
+
+.dark .school-dashboard-summary__card strong {
+    color: #f8fafc;
+}
+
+.school-dashboard-summary__description {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: rgb(37 99 235);
+    font-size: 0.93rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.school-dashboard-summary__description svg {
+    flex: 0 0 auto;
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Schools\Tables;
 
+use App\Models\School;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -19,6 +20,7 @@ class SchoolsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn ($query) => $query->whereNull('parent_school_id'))
             ->columns([
                 ImageColumn::make('logo_path')
                     ->label('Logo')
@@ -30,6 +32,15 @@ class SchoolsTable
                     ->searchable()
                     ->sortable()
                     ->description(fn ($record): string => collect([$record->code, $record->email, $record->phone])->filter()->join(' | ')),
+                TextColumn::make('sections')
+                    ->label('Sections')
+                    ->state(function (School $record): string {
+                        return $record->divisions()
+                            ->pluck('division')
+                            ->map(fn (string $division): string => School::DIVISIONS[$division] ?? $division)
+                            ->join(', ') ?: 'None';
+                    })
+                    ->toggleable(),
                 TextColumn::make('code')
                     ->searchable()
                     ->sortable(),

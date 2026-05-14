@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,13 +33,26 @@ class UserForm
                             ->required(fn (string $operation): bool => $operation === 'create')
                             ->dehydrated(fn (?string $state): bool => filled($state)),
                         DateTimePicker::make('email_verified_at'),
+                        Select::make('school_role')
+                            ->label('School role')
+                            ->options([
+                                'school_admin' => 'School admin',
+                                'teacher' => 'Teacher',
+                                'staff' => 'Staff',
+                            ])
+                            ->default('staff')
+                            ->required()
+                            ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                            ->dehydrated(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school'),
                         Select::make('schools')
                             ->relationship('schools', 'name')
                             ->multiple()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                         Toggle::make('is_platform_admin')
-                            ->label('Platform admin'),
+                            ->label('Platform admin')
+                            ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                         Toggle::make('is_active')
                             ->default(true),
                     ])

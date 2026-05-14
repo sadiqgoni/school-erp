@@ -6,6 +6,7 @@ use App\Models\Staff;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdminPanelSmokeTest extends TestCase
@@ -81,6 +82,7 @@ class AdminPanelSmokeTest extends TestCase
             "/portal/{$tenantSlug}/students/{$student->getKey()}",
             "/portal/{$tenantSlug}/staff",
             "/portal/{$tenantSlug}/staff/{$staff->getKey()}",
+            "/portal/{$tenantSlug}/users",
             "/portal/{$tenantSlug}/student-invoices",
             "/portal/{$tenantSlug}/exams",
         ] as $path) {
@@ -95,15 +97,10 @@ class AdminPanelSmokeTest extends TestCase
             ->get("/portal/{$tenantSlug}/profile")
             ->assertNotFound();
 
-        foreach ([
-            "/portal/{$tenantSlug}/users",
-            "/portal/{$tenantSlug}/schools",
-        ] as $path) {
-            $this
-                ->actingAs($schoolAdmin)
-                ->get($path)
-                ->assertForbidden();
-        }
+        $this
+            ->actingAs($schoolAdmin)
+            ->get("/portal/{$tenantSlug}/schools")
+            ->assertForbidden();
     }
 
     public function test_school_user_is_redirected_from_admin_to_their_school_portal(): void
@@ -142,5 +139,59 @@ class AdminPanelSmokeTest extends TestCase
             ->get("/portal/{$tenantSlug}/terms/create")
             ->assertOk()
             ->assertDontSee('name="data.position"', escape: false);
+    }
+
+    public function test_teacher_user_only_accesses_teacher_workspace_and_teacher_resources(): void
+    {
+        $this->seed();
+
+        $schoolAdmin = User::query()->where('email', 'principal@demo-school.test')->firstOrFail();
+        $school = $schoolAdmin->schools()->firstOrFail();
+        $tenantSlug = $school->slug;
+
+        $teacher = User::query()->create([
+            'name' => 'Teacher User',
+            'email' => 'teacher-login@example.com',
+            'password' => Hash::make('password'),
+            'is_platform_admin' => false,
+            'is_active' => true,
+        ]);
+
+        $teacher->schools()->syncWithoutDetaching([
+            $school->getKey() => [
+                'role' => 'teacher',
+                'is_primary' => false,
+            ],
+        ]);
+
+        Staff::query()
+            ->where('school_id', $school->getKey())
+            ->firstOrFail()
+            ->update(['user_id' => $teacher->getKey(), 'staff_type' => Staff::TYPE_TEACHING]);
+
+        foreach ([
+            "/portal/{$tenantSlug}/my-teaching",
+            "/portal/{$tenantSlug}/class-subjects",
+            "/portal/{$tenantSlug}/student-scores",
+            "/portal/{$tenantSlug}/report-cards",
+        ] as $path) {
+            $this
+                ->actingAs($teacher)
+                ->get($path)
+                ->assertOk();
+        }
+
+        foreach ([
+            "/portal/{$tenantSlug}/staff",
+            "/portal/{$tenantSlug}/students",
+            "/portal/{$tenantSlug}/school-classes",
+            "/portal/{$tenantSlug}/fee-types",
+            "/portal/{$tenantSlug}/student-invoices",
+        ] as $path) {
+            $this
+                ->actingAs($teacher)
+                ->get($path)
+                ->assertForbidden();
+        }
     }
 }

@@ -20,7 +20,6 @@ class AssessmentComponentForm
                         SchoolSelect::make(),
                         Select::make('exam_id')->relationship('exam', 'name')->searchable()->preload()->required(),
                         TextInput::make('name')->required()->maxLength(255),
-                        TextInput::make('code')->required()->maxLength(40),
                         TextInput::make('max_score')->numeric()->required(),
                         TextInput::make('position')->numeric()->required()->default(1),
                         Toggle::make('is_active')->default(true),

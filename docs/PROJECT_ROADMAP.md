@@ -101,6 +101,7 @@ Start with single-database row-level tenancy:
 - [x] Add student and staff attendance foundations.
 - [x] Add finance foundations for fees, invoices, payments, and expenses.
 - [x] Add exams and report-card foundations.
+- [x] Add staff-to-user login foundation for teacher/staff portal access.
 - [ ] Review/OCR the PDF for hidden requirements.
 
 ## Current Build Notes
@@ -114,4 +115,5 @@ Start with single-database row-level tenancy:
 - System setup now includes a branded Filament panel, ordered navigation groups, user/account management, and inactive-account middleware.
 - Finance setup now includes fee types, fee structures, student invoices, invoice items, fee payments/receipts, expense categories, and expenses.
 - Exams setup now includes exams, grade scales, assessment components, student scores, compiled results, and report cards.
+- Staff Directory can now create linked login accounts for teachers and staff, using `staff.user_id` and the school-user role pivot as the access foundation.
 - Next implementation focus: communications and operations foundations for notices, SMS/email logs, reminders, visitor log, library, transport, and hostel, because the core academic/people/finance/exam spine is now in place.

@@ -7,38 +7,77 @@ use Illuminate\Database\Eloquent\Model;
 
 trait SchoolPanelResource
 {
+    protected static array $teacherResources = [
+        'App\\Filament\\Resources\\ClassSubjects\\ClassSubjectResource',
+        'App\\Filament\\Resources\\ReportCards\\ReportCardResource',
+        'App\\Filament\\Resources\\StudentScores\\StudentScoreResource',
+    ];
+
     public static function canAccess(): bool
     {
-        return static::isSchoolPanel() && parent::canAccess();
+        return static::canAccessSchoolResource() && parent::canAccess();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return static::isSchoolPanel() && parent::shouldRegisterNavigation();
+        if (! static::isSchoolPanel() || ! parent::shouldRegisterNavigation()) {
+            return false;
+        }
+
+        return ! static::isTeacherUser() || static::isTeacherResource();
     }
 
     public static function canViewAny(): bool
     {
-        return static::isSchoolPanel() && parent::canViewAny();
+        return static::canAccessSchoolResource() && parent::canViewAny();
     }
 
     public static function canCreate(): bool
     {
-        return static::isSchoolPanel() && parent::canCreate();
+        if (! static::canAccessSchoolResource()) {
+            return false;
+        }
+
+        return ! static::isTeacherUser() && parent::canCreate();
     }
 
     public static function canView(Model $record): bool
     {
-        return static::isSchoolPanel() && parent::canView($record);
+        return static::canAccessSchoolResource() && parent::canView($record);
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::isSchoolPanel() && parent::canEdit($record);
+        if (! static::canAccessSchoolResource()) {
+            return false;
+        }
+
+        return ! static::isTeacherUser() && parent::canEdit($record);
     }
 
     protected static function isSchoolPanel(): bool
     {
         return Filament::getCurrentPanel()?->getId() === 'school';
+    }
+
+    protected static function canAccessSchoolResource(): bool
+    {
+        if (! static::isSchoolPanel()) {
+            return false;
+        }
+
+        return ! static::isTeacherUser() || static::isTeacherResource();
+    }
+
+    protected static function isTeacherUser(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'teacher');
+    }
+
+    protected static function isTeacherResource(): bool
+    {
+        return in_array(static::class, static::$teacherResources, true);
     }
 }

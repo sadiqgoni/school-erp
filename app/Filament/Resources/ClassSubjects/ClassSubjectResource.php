@@ -10,6 +10,7 @@ use App\Filament\Resources\ClassSubjects\Tables\ClassSubjectsTable;
 use App\Filament\Resources\Concerns\SchoolPanelResource;
 use App\Models\ClassSubject;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -28,6 +29,20 @@ class ClassSubjectResource extends Resource
     protected static string|\UnitEnum|null $navigationGroup = 'School Setup';
 
     protected static ?int $navigationSort = 60;
+
+    public static function getNavigationLabel(): string
+    {
+        return Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher')
+            ? 'My Class Subjects'
+            : static::$navigationLabel;
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher')
+            ? 'Teacher Portal'
+            : static::$navigationGroup;
+    }
 
     public static function form(Schema $schema): Schema
     {

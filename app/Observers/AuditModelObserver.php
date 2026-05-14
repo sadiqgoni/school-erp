@@ -15,6 +15,43 @@ class AuditModelObserver
         'created_at',
         'updated_at',
         'email_verified_at',
+        'remember_token',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $importantFields = [
+        'name',
+        'email',
+        'password',
+        'is_active',
+        'is_platform_admin',
+        'status',
+        'school_id',
+        'student_id',
+        'staff_id',
+        'user_id',
+        'school_class_id',
+        'class_section_id',
+        'academic_year_id',
+        'term_id',
+        'exam_id',
+        'subject_id',
+        'assessment_component_id',
+        'score',
+        'total_score',
+        'average_score',
+        'position',
+        'teacher_comment',
+        'principal_comment',
+        'published_at',
+        'amount',
+        'paid_amount',
+        'balance',
+        'payment_status',
+        'invoice_number',
+        'payment_reference',
     ];
 
     public function created(Model $model): void
@@ -87,7 +124,7 @@ class AuditModelObserver
             unset($values[$field]);
         }
 
-        return $values;
+        return array_intersect_key($values, array_flip($this->importantFields));
     }
 
     protected function modelName(Model $model): string

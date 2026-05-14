@@ -4,9 +4,11 @@ namespace App\Filament\Resources\CompiledResults\Pages;
 
 use App\Filament\Resources\CompiledResults\CompiledResultResource;
 use App\Models\CompiledResult;
+use App\Models\Enrollment;
 use App\Models\Exam;
 use App\Models\GradeScale;
 use App\Models\ReportCard;
+use App\Models\StudentAttendanceRecord;
 use App\Models\StudentScore;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -59,7 +61,7 @@ class ListCompiledResults extends ListRecords
         ];
     }
 
-    protected static function compile(array $data): void
+    public static function compile(array $data): void
     {
         DB::transaction(function () use ($data): void {
             $exam = Exam::query()->with('components')->findOrFail($data['exam_id']);
@@ -155,27 +157,104 @@ class ListCompiledResults extends ListRecords
                 'subjects' => $results->count(),
             ]);
 
-        $rankedStudentIds = $totals
-            ->sortByDesc('average')
+        $placements = $totals
             ->keys()
-            ->values();
+            ->mapWithKeys(fn ($studentId): array => [$studentId => self::studentPlacement($exam, (int) $studentId)]);
+        $reportCards = collect();
 
         foreach ($totals as $studentId => $summary) {
-            ReportCard::query()->updateOrCreate(
+            $attendance = self::attendanceSummary($exam, (int) $studentId);
+            $reportCard = ReportCard::query()->firstOrNew(
                 [
                     'exam_id' => $exam->getKey(),
                     'student_id' => $studentId,
                 ],
-                [
-                    'school_id' => $exam->school_id,
-                    'academic_year_id' => $exam->academic_year_id,
-                    'term_id' => $exam->term_id,
-                    'total_score' => $summary['total'],
-                    'average_score' => $summary['average'],
-                    'position' => $rankedStudentIds->search($studentId) + 1,
-                    'status' => 'draft',
-                ],
             );
+
+            $reportCard->fill([
+                'school_id' => $exam->school_id,
+                'academic_year_id' => $exam->academic_year_id,
+                'term_id' => $exam->term_id,
+                'total_score' => $summary['total'],
+                'average_score' => $summary['average'],
+                'position' => null,
+                'attendance_total_days' => $attendance['total'],
+                'attendance_present_days' => $attendance['present'],
+                'attendance_absent_days' => $attendance['absent'],
+                'status' => $reportCard->exists ? $reportCard->status : 'draft',
+            ])->save();
+
+            $reportCards->put($studentId, $reportCard);
         }
+
+        $totals
+            ->groupBy(
+                fn (array $summary, $studentId): string => self::placementKey($placements->get($studentId)),
+                preserveKeys: true,
+            )
+            ->each(function ($classTotals) use ($reportCards): void {
+                $position = 1;
+
+                $classTotals
+                    ->sortByDesc('average')
+                    ->each(function (array $summary, $studentId) use (&$position, $reportCards): void {
+                        $reportCard = $reportCards->get($studentId);
+
+                        if (! $reportCard) {
+                            return;
+                        }
+
+                        $reportCard->forceFill(['position' => $position++])->save();
+                    });
+            });
+    }
+
+    protected static function studentPlacement(Exam $exam, int $studentId): ?Enrollment
+    {
+        return Enrollment::query()
+            ->where('school_id', $exam->school_id)
+            ->where('student_id', $studentId)
+            ->where('academic_year_id', $exam->academic_year_id)
+            ->when($exam->term_id, fn ($query, $termId) => $query->where(fn ($query) => $query
+                ->where('term_id', $termId)
+                ->orWhereNull('term_id')))
+            ->where('status', 'active')
+            ->orderByRaw('term_id is null')
+            ->latest('enrolled_on')
+            ->first();
+    }
+
+    protected static function placementKey(?Enrollment $placement): string
+    {
+        return collect([
+            $placement?->school_class_id,
+            $placement?->class_section_id ?: 'whole',
+        ])->implode(':');
+    }
+
+    /**
+     * @return array{total: int, present: int, absent: int}
+     */
+    protected static function attendanceSummary(Exam $exam, int $studentId): array
+    {
+        $records = StudentAttendanceRecord::query()
+            ->where('student_id', $studentId)
+            ->whereHas('studentAttendance', function ($query) use ($exam): void {
+                $query
+                    ->where('school_id', $exam->school_id)
+                    ->where('academic_year_id', $exam->academic_year_id)
+                    ->when($exam->term_id, fn ($query, $termId) => $query->where('term_id', $termId))
+                    ->where('status', 'submitted');
+            })
+            ->get();
+
+        $present = $records->whereIn('status', ['present', 'late'])->count();
+        $absent = $records->where('status', 'absent')->count();
+
+        return [
+            'total' => $records->count(),
+            'present' => $present,
+            'absent' => $absent,
+        ];
     }
 }

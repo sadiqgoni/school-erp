@@ -11,6 +11,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
 
@@ -25,6 +26,15 @@ class StaffForm
                         ->description('Start with school unit and role/position.')
                         ->schema([
                             SchoolSelect::make(),
+                            Select::make('staff_type')
+                                ->label('Staff type')
+                                ->required()
+                                ->default(Staff::TYPE_TEACHING)
+                                ->options([
+                                    Staff::TYPE_TEACHING => 'Teaching staff',
+                                    Staff::TYPE_NON_TEACHING => 'Non-teaching staff',
+                                ])
+                                ->native(false),
                             Select::make('department_id')
                                 ->label('Department / Unit')
                                 ->relationship('department', 'name')
@@ -199,6 +209,32 @@ class StaffForm
                             Textarea::make('notes')
                                 ->label('Remarks')
                                 ->columnSpanFull(),
+                        ])
+                        ->columns(2),
+                    Wizard\Step::make('Portal Access')
+                        ->description('Create a login only when this staff member needs portal access.')
+                        ->schema([
+                            Toggle::make('create_login_account')
+                                ->label('Create login account')
+                                ->dehydrated(false)
+                                ->live(),
+                            TextInput::make('login_email')
+                                ->label('Login email')
+                                ->email()
+                                ->maxLength(255)
+                                ->dehydrated(false)
+                                ->visible(fn ($get): bool => (bool) $get('create_login_account'))
+                                ->required(fn ($get): bool => (bool) $get('create_login_account'))
+                                ->helperText('Use the email this staff member will use to sign in.'),
+                            TextInput::make('temporary_password')
+                                ->label('Temporary password')
+                                ->password()
+                                ->revealable()
+                                ->minLength(8)
+                                ->dehydrated(false)
+                                ->visible(fn ($get): bool => (bool) $get('create_login_account'))
+                                ->required(fn ($get): bool => (bool) $get('create_login_account'))
+                                ->helperText('The staff member should change this after first login.'),
                         ])
                         ->columns(2),
                 ])

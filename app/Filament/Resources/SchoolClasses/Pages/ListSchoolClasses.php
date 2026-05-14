@@ -34,16 +34,19 @@ class ListSchoolClasses extends ListRecords
                 ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
                 ->schema([
                     CheckboxList::make('templates')
-                        ->options(SchoolStructurePreset::options())
+                        ->options(fn (): array => SchoolStructurePreset::optionsForDivision(Filament::getTenant()?->division))
+                        ->default(fn (): array => SchoolStructurePreset::defaultTemplatesForDivision(Filament::getTenant()?->division))
                         ->columns(2)
                         ->live()
                         ->afterStateUpdated(function (?array $state, Set $set): void {
                             $set('classes', SchoolStructurePreset::defaults($state ?? []));
                         })
-                        ->helperText('Choose one or more structures, for example Nursery + Primary + Secondary.'),
+                        ->helperText('Only structures for the selected school section are shown.'),
                     Repeater::make('classes')
                         ->label('Class setup')
-                        ->default([])
+                        ->default(fn (): array => SchoolStructurePreset::defaults(
+                            SchoolStructurePreset::defaultTemplatesForDivision(Filament::getTenant()?->division),
+                        ))
                         ->schema([
                             TextInput::make('name')
                                 ->required()
@@ -110,6 +113,7 @@ class ListSchoolClasses extends ListRecords
 
         SchoolClass::query()
             ->select('department')
+            ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
             ->whereNotNull('department')
             ->distinct()
             ->orderBy('department')

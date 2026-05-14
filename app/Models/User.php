@@ -80,12 +80,31 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function getTenants(Panel $panel): array|Collection
     {
-        return $this->is_platform_admin ? School::query()->get() : $this->schools;
+        if ($panel->getId() !== 'school') {
+            return $this->is_platform_admin
+                ? School::query()->withoutGlobalScopes()->get()
+                : $this->schools()->withoutGlobalScopes()->get();
+        }
+
+        if ($this->is_platform_admin) {
+            return School::query()
+                ->withoutGlobalScopes()
+                ->whereNotNull('division')
+                ->orWhereDoesntHave('divisions')
+                ->get();
+        }
+
+        return $this->schools()
+            ->withoutGlobalScopes()
+            ->whereNotNull('division')
+            ->get();
     }
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
         return $this->schools()
+            ->withoutGlobalScopes()
+            ->when($panel->getId() === 'school', fn ($query) => $query->whereNotNull('division'))
             ->orderByDesc('school_user.is_primary')
             ->orderBy('school_user.school_id')
             ->first();
@@ -93,6 +112,33 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->is_platform_admin || $this->schools()->whereKey($tenant)->exists();
+        return $this->is_platform_admin || $this->schools()
+            ->withoutGlobalScopes()
+            ->whereKey($tenant)
+            ->exists();
+    }
+
+    public function roleForSchool(Model|int|null $school): ?string
+    {
+        $schoolId = $school instanceof Model ? $school->getKey() : $school;
+
+        if (! $schoolId) {
+            return null;
+        }
+
+        $school = $this->schools()
+            ->withoutGlobalScopes()
+            ->whereKey($schoolId)
+            ->first();
+
+        return $school?->pivot?->role;
+    }
+
+    /**
+     * @param  array<int, string>|string  $roles
+     */
+    public function hasSchoolRole(Model|int|null $school, array|string $roles): bool
+    {
+        return in_array($this->roleForSchool($school), (array) $roles, true);
     }
 }

@@ -2,10 +2,9 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\SchoolOverview;
+use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
 use App\Http\Middleware\EnsureActiveUser;
-use App\Http\Middleware\LogUserPageVisit;
 use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -45,6 +44,7 @@ class SchoolPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->viteTheme('resources/css/filament/panel-theme.css')
             ->navigationGroups([
+                'Teacher Portal',
                 'School Setup',
                 'Students',
                 'Staff',
@@ -61,7 +61,7 @@ class SchoolPanelProvider extends PanelProvider
             ])
             ->widgets([
                 SchoolWelcomeHero::class,
-                SchoolOverview::class,
+                SchoolDashboardSummary::class,
                 // AccountWidget::class,
             ])
             ->middleware([
@@ -74,7 +74,6 @@ class SchoolPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                LogUserPageVisit::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

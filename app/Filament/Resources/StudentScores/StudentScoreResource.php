@@ -9,6 +9,7 @@ use App\Filament\Resources\StudentScores\Pages\ListStudentScores;
 use App\Filament\Resources\StudentScores\Schemas\StudentScoreForm;
 use App\Filament\Resources\StudentScores\Tables\StudentScoresTable;
 use App\Models\StudentScore;
+use App\Support\TeacherWorkspace;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -28,6 +29,16 @@ class StudentScoreResource extends Resource
     protected static ?int $navigationSort = 40;
 
     protected static ?string $navigationLabel = 'Score Entry';
+
+    public static function getNavigationLabel(): string
+    {
+        return TeacherWorkspace::isTeacher() ? 'My Score Entry' : static::$navigationLabel;
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return TeacherWorkspace::isTeacher() ? 'Teacher Portal' : static::$navigationGroup;
+    }
 
     public static function form(Schema $schema): Schema
     {

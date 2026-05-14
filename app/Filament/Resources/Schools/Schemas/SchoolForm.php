@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Schools\Schemas;
 
+use App\Models\School;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -68,6 +69,15 @@ class SchoolForm
                 ->columns(3)->collapsible()->columnSpanFull(),
             Section::make('Portal settings')
                 ->schema([
+                    CheckboxList::make('sections')
+                        ->label('School sections')
+                        ->options(School::DIVISIONS)
+                        ->default(array_keys(School::DIVISIONS))
+                        ->required()
+                        ->columns(3)
+                        ->helperText('Choose the section workspaces this school should have in the portal.')
+                        ->visible(fn (string $operation): bool => $operation === 'create')
+                        ->columnSpanFull(),
                     Select::make('subscription_plan')
                         ->required()
                         ->options([

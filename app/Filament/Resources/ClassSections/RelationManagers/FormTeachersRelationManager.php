@@ -6,11 +6,13 @@ use App\Models\AcademicYear;
 use App\Models\Staff;
 use App\Models\TeachingAssignment;
 use App\Models\Term;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -119,7 +121,8 @@ class FormTeachersRelationManager extends RelationManager
                     ->preload(),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make()
+                CreateAction::make()
+                    ->label('Assign form teacher')
                     ->mutateDataUsing(function (array $data): array {
                         $arm = $this->getOwnerRecord();
 
@@ -132,7 +135,7 @@ class FormTeachersRelationManager extends RelationManager
                     }),
             ])
             ->recordActions([
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->mutateDataUsing(function (array $data): array {
                         $arm = $this->getOwnerRecord();
 
@@ -143,7 +146,7 @@ class FormTeachersRelationManager extends RelationManager
 
                         return $data;
                     }),
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ]);
     }
 }

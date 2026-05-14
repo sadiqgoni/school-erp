@@ -19,9 +19,14 @@ class SchoolWelcomeHero extends Widget
 {
     protected string $view = 'filament.widgets.school-welcome-hero';
 
-    protected static ?int $sort = -10;
+    protected static ?int $sort = -30;
 
     protected int|string|array $columnSpan = 'full';
+
+    public static function canView(): bool
+    {
+        return ! Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher');
+    }
 
     protected function getViewData(): array
     {
@@ -54,7 +59,8 @@ class SchoolWelcomeHero extends Widget
         $completed = collect($setupChecks)->where('done', true)->count();
 
         return [
-            'schoolName' => $tenant?->name ?? 'School Dice',
+            'schoolName' => $tenant?->baseSchoolName() ?? 'School Dice',
+            'sectionName' => $tenant?->divisionLabel(),
             'schoolCode' => $tenant?->code,
             'logoUrl' => self::resolveLogoUrl($tenant?->logo_path),
             'progress' => (int) round(($completed / count($setupChecks)) * 100),

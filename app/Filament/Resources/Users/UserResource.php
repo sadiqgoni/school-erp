@@ -35,6 +35,11 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
+    public static function getNavigationLabel(): string
+    {
+        return Filament::getCurrentPanel()?->getId() === 'school' ? 'Users & Access' : 'Users';
+    }
+
     public static function form(Schema $schema): Schema
     {
         return UserForm::configure($schema);
@@ -91,8 +96,18 @@ class UserResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Filament::getCurrentPanel()?->getId() === 'admin'
-            && (bool) Filament::auth()->user()?->is_platform_admin;
+        $panel = Filament::getCurrentPanel()?->getId();
+        $user = Filament::auth()->user();
+
+        if ($panel === 'admin') {
+            return (bool) $user?->is_platform_admin;
+        }
+
+        if ($panel === 'school') {
+            return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'school_admin');
+        }
+
+        return false;
     }
 
     public static function canViewAny(): bool

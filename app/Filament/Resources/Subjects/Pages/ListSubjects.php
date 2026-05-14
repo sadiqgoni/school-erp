@@ -32,15 +32,18 @@ class ListSubjects extends ListRecords
                 ->modalWidth('7xl')
                 ->schema([
                     CheckboxList::make('templates')
-                        ->options(SubjectPreset::options())
+                        ->options(fn (): array => SubjectPreset::optionsForDivision(Filament::getTenant()?->division))
+                        ->default(fn (): array => SubjectPreset::defaultTemplatesForDivision(Filament::getTenant()?->division))
                         ->columns(2)
                         ->live()
                         ->afterStateUpdated(function (?array $state, Set $set): void {
                             $set('subjects', SubjectPreset::defaults($state ?? []));
                         })
-                        ->helperText('Choose one or more sets, for example Primary + Junior Secondary + Senior Secondary.'),
+                        ->helperText('Only subject sets for the selected school section are shown.'),
                     Repeater::make('subjects')
-                        ->default([])
+                        ->default(fn (): array => SubjectPreset::defaults(
+                            SubjectPreset::defaultTemplatesForDivision(Filament::getTenant()?->division),
+                        ))
                         ->schema([
                             TextInput::make('name')
                                 ->required()

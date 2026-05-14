@@ -29,6 +29,7 @@ class ReportCardForm
                         TextInput::make('position')->numeric(),
                         Select::make('status')->required()->default('draft')->options([
                             'draft' => 'Draft',
+                            'form_teacher_reviewed' => 'Form teacher reviewed',
                             'approved' => 'Approved',
                             'published' => 'Published',
                         ]),

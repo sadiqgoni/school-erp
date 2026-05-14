@@ -6,8 +6,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['school_id', 'exam_id', 'student_id', 'academic_year_id', 'term_id', 'total_score', 'average_score', 'position', 'teacher_comment', 'principal_comment', 'status', 'published_at'])]
+#[Fillable(['school_id', 'exam_id', 'student_id', 'academic_year_id', 'term_id', 'total_score', 'average_score', 'position', 'attendance_total_days', 'attendance_present_days', 'attendance_absent_days', 'teacher_comment', 'principal_comment', 'status', 'published_at'])]
 class ReportCard extends Model
 {
     use HasFactory;
@@ -44,5 +45,10 @@ class ReportCard extends Model
     public function term(): BelongsTo
     {
         return $this->belongsTo(Term::class);
+    }
+
+    public function traitRatings(): HasMany
+    {
+        return $this->hasMany(ReportCardTraitRating::class);
     }
 }
