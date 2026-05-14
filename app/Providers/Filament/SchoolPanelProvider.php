@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
+use App\Filament\Widgets\TeacherDashboard;
 use App\Http\Middleware\EnsureActiveUser;
 use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
@@ -60,6 +61,7 @@ class SchoolPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->widgets([
+                TeacherDashboard::class,
                 SchoolWelcomeHero::class,
                 SchoolDashboardSummary::class,
                 // AccountWidget::class,

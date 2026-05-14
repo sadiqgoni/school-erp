@@ -35,6 +35,7 @@ class MyTeaching extends Page
                 'staff' => null,
                 'formAssignments' => collect(),
                 'subjectAssignments' => collect(),
+                'subjectGroups' => collect(),
             ];
         }
 
@@ -42,6 +43,8 @@ class MyTeaching extends Page
             'staff' => $staff,
             'formAssignments' => TeacherWorkspace::formAssignments(),
             'subjectAssignments' => TeacherWorkspace::subjectAssignments(),
+            'subjectGroups' => TeacherWorkspace::subjectAssignments()
+                ->groupBy(fn ($assignment): string => (string) $assignment->subject?->name),
         ];
     }
 }
