@@ -2,10 +2,13 @@
 
 namespace App\Filament\Resources\FeePayments\Tables;
 
+use App\Support\PaymentCommunicationCoordinator;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -57,6 +60,21 @@ class FeePaymentsTable
                 ]),
             ])
             ->recordActions([
+                Action::make('queueReceiptMessage')
+                    ->label('Queue receipt')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('info')
+                    ->visible(fn ($record): bool => $record->status === 'confirmed')
+                    ->action(function ($record): void {
+                        $logs = app(PaymentCommunicationCoordinator::class)
+                            ->queuePaymentConfirmation($record);
+
+                        Notification::make()
+                            ->title('Receipt message queued')
+                            ->body("Created {$logs->count()} communication log(s).")
+                            ->success()
+                            ->send();
+                    }),
                 EditAction::make(),
             ])
             ->toolbarActions([

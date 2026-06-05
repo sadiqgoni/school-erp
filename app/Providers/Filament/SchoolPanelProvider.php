@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\SplitLogin;
+use App\Filament\Widgets\ParentDashboardSummary;
 use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
 use App\Filament\Widgets\TeacherDashboard;
@@ -33,7 +35,7 @@ class SchoolPanelProvider extends PanelProvider
             ->brandName('School Dice')
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
             ->brandLogoHeight('75px')
-            ->login()
+            ->login(SplitLogin::class)
             ->spa()
             ->colors([
                 'primary' => Color::Teal,
@@ -45,6 +47,7 @@ class SchoolPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->viteTheme('resources/css/filament/panel-theme.css')
             ->navigationGroups([
+                'Parent Portal',
                 'Teacher Portal',
                 'School Setup',
                 'Students',
@@ -62,6 +65,7 @@ class SchoolPanelProvider extends PanelProvider
             ])
             ->widgets([
                 TeacherDashboard::class,
+                ParentDashboardSummary::class,
                 SchoolWelcomeHero::class,
                 SchoolDashboardSummary::class,
                 // AccountWidget::class,

@@ -42,6 +42,12 @@ class StudentsTable
                     ])->filter()->implode('  ·  ')),
                 TextColumn::make('gender')
                     ->badge(),
+                TextColumn::make('enrollments.schoolClass.name')
+                    ->label('Class')
+                    ->badge()
+                    ->separator(',')
+                    ->placeholder('No class')
+                    ->toggleable(),
                 TextColumn::make('guardian_links_count')
                     ->counts('guardianLinks')
                     ->label('Contacts')

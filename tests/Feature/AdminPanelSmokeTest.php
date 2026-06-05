@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Staff;
 use App\Models\Student;
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -101,6 +102,60 @@ class AdminPanelSmokeTest extends TestCase
             ->actingAs($schoolAdmin)
             ->get("/portal/{$tenantSlug}/schools")
             ->assertForbidden();
+    }
+
+    public function test_platform_admin_only_sees_explicitly_linked_school_sections_in_school_portal(): void
+    {
+        $this->seed();
+
+        $platformAdmin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+        $allowedSchool = School::query()->create([
+            'name' => 'Allowed School',
+            'code' => 'ALLOW-NUR',
+            'slug' => 'allowed-school-nursery',
+            'division' => School::DIVISION_NURSERY,
+            'email' => 'allowed@example.com',
+            'phone' => '+2348000000011',
+            'address' => 'Allowed address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        $blockedSchool = School::query()->create([
+            'name' => 'Blocked School',
+            'code' => 'BLOCK-NUR',
+            'slug' => 'blocked-school-nursery',
+            'division' => School::DIVISION_NURSERY,
+            'email' => 'blocked@example.com',
+            'phone' => '+2348000000012',
+            'address' => 'Blocked address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        $platformAdmin->schools()->sync([
+            $allowedSchool->getKey() => [
+                'role' => 'platform_admin',
+                'is_primary' => true,
+            ],
+        ]);
+
+        $this->assertTrue($platformAdmin->fresh()->canAccessTenant($allowedSchool));
+        $this->assertFalse($platformAdmin->fresh()->canAccessTenant($blockedSchool));
+
+        $this
+            ->actingAs($platformAdmin)
+            ->get("/portal/{$allowedSchool->slug}")
+            ->assertOk();
+
+        $this
+            ->actingAs($platformAdmin)
+            ->get("/portal/{$blockedSchool->slug}")
+            ->assertNotFound();
     }
 
     public function test_school_user_is_redirected_from_admin_to_their_school_portal(): void

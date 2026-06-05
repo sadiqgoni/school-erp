@@ -53,6 +53,21 @@ class Student extends Model
         return $this->hasMany(GuardianStudent::class);
     }
 
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(StudentInvoice::class);
+    }
+
+    public function communicationLogs(): HasMany
+    {
+        return $this->hasMany(CommunicationLog::class);
+    }
+
+    public function reportCards(): HasMany
+    {
+        return $this->hasMany(ReportCard::class);
+    }
+
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);

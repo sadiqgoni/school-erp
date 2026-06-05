@@ -3,6 +3,9 @@
 namespace App\Filament\Resources\Guardians\RelationManagers;
 
 use App\Models\Student;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
@@ -77,11 +80,11 @@ class StudentLinksRelationManager extends RelationManager
                     ->label('SMS'),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+              CreateAction::make(),
             ])
             ->recordActions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            EditAction::make(),
+           DeleteAction::make(),
             ]);
     }
 }

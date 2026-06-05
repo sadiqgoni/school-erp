@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StudentInvoices\Pages;
 
+use App\Filament\Support\ClassTabs;
 use App\Filament\Resources\StudentInvoices\StudentInvoiceResource;
 use App\Models\AcademicYear;
 use App\Models\Enrollment;
@@ -143,5 +144,10 @@ class ListStudentInvoices extends ListRecords
                 }),
             CreateAction::make(),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::studentEnrollment(StudentInvoice::class, 'All invoices');
     }
 }

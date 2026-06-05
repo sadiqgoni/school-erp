@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Guardians\Pages;
 
 use App\Filament\Resources\Guardians\GuardianResource;
+use App\Filament\Support\ClassTabs;
+use App\Models\Guardian;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 
@@ -15,5 +17,10 @@ class ListGuardians extends ListRecords
         return [
             CreateAction::make(),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::studentEnrollment(Guardian::class, 'All guardians', 'studentLinks.student.enrollments');
     }
 }

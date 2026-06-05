@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['school_id', 'student_id', 'academic_year_id', 'term_id', 'student_discount_id', 'income_account_id', 'invoice_number', 'invoice_type', 'invoice_date', 'due_date', 'subtotal', 'discount', 'total', 'amount_paid', 'balance', 'status', 'notes'])]
+#[Fillable(['school_id', 'student_id', 'academic_year_id', 'term_id', 'student_discount_id', 'income_account_id', 'invoice_number', 'invoice_type', 'invoice_date', 'due_date', 'subtotal', 'discount', 'total', 'amount_paid', 'balance', 'status', 'payment_provider', 'payment_reference', 'payment_url', 'payment_status', 'payment_metadata', 'notes'])]
 class StudentInvoice extends Model
 {
     use HasFactory;
@@ -32,6 +32,7 @@ class StudentInvoice extends Model
             'total' => 'decimal:2',
             'amount_paid' => 'decimal:2',
             'balance' => 'decimal:2',
+            'payment_metadata' => 'array',
         ];
     }
 
@@ -73,6 +74,17 @@ class StudentInvoice extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(FeePayment::class);
+    }
+
+    public function communicationLogs(): HasMany
+    {
+        return $this->hasMany(CommunicationLog::class, 'related_id')
+            ->where('related_type', self::class);
+    }
+
+    public function reminders(): HasMany
+    {
+        return $this->hasMany(Reminder::class);
     }
 
     public function transactions(): HasMany

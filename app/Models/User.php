@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -65,6 +66,11 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $this->hasMany(UserActivity::class);
     }
 
+    public function guardians(): HasMany
+    {
+        return $this->hasMany(Guardian::class);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         if (! $this->is_active) {
@@ -73,7 +79,9 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
         return match ($panel->getId()) {
             'admin' => $this->is_platform_admin || $this->schools()->exists(),
-            'school' => $this->is_platform_admin || $this->schools()->exists(),
+            'school' => $this->is_platform_admin
+                ? $this->schoolPanelSchoolsQuery()->exists()
+                : $this->schools()->exists(),
             default => false,
         };
     }
@@ -86,22 +94,19 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
                 : $this->schools()->withoutGlobalScopes()->get();
         }
 
-        if ($this->is_platform_admin) {
-            return School::query()
-                ->withoutGlobalScopes()
-                ->whereNotNull('division')
-                ->orWhereDoesntHave('divisions')
-                ->get();
+        if ($this->isParent()) {
+            return $this->parentStudentSchoolsQuery()->get();
         }
 
-        return $this->schools()
-            ->withoutGlobalScopes()
-            ->whereNotNull('division')
-            ->get();
+        return $this->schoolPanelSchoolsQuery()->get();
     }
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
+        if ($panel->getId() === 'school' && ! $this->is_platform_admin && $this->isParent()) {
+            return $this->parentStudentSchoolsQuery()->first();
+        }
+
         return $this->schools()
             ->withoutGlobalScopes()
             ->when($panel->getId() === 'school', fn ($query) => $query->whereNotNull('division'))
@@ -112,7 +117,21 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        return $this->is_platform_admin || $this->schools()
+        if ($this->is_platform_admin) {
+            return $this->schoolPanelSchoolsQuery()
+                ->whereKey($tenant)
+                ->exists();
+        }
+
+        if ($this->isParent()) {
+            return Guardian::query()
+                ->where('user_id', $this->getKey())
+                ->where('school_id', $tenant->getKey())
+                ->whereHas('studentLinks.student')
+                ->exists();
+        }
+
+        return $this->schools()
             ->withoutGlobalScopes()
             ->whereKey($tenant)
             ->exists();
@@ -140,5 +159,31 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     public function hasSchoolRole(Model|int|null $school, array|string $roles): bool
     {
         return in_array($this->roleForSchool($school), (array) $roles, true);
+    }
+
+    protected function isParent(): bool
+    {
+        return $this->schools()
+            ->withoutGlobalScopes()
+            ->wherePivot('role', 'parent')
+            ->exists();
+    }
+
+    protected function parentStudentSchoolsQuery(): Builder
+    {
+        return School::query()
+            ->withoutGlobalScopes()
+            ->whereNotNull('division')
+            ->whereHas('guardians', fn (Builder $query) => $query
+                ->where('user_id', $this->getKey())
+                ->whereHas('studentLinks.student'))
+            ->orderBy('name');
+    }
+
+    protected function schoolPanelSchoolsQuery(): BelongsToMany
+    {
+        return $this->schools()
+            ->withoutGlobalScopes()
+            ->whereNotNull('division');
     }
 }

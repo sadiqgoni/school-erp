@@ -14,7 +14,19 @@ class StudentInvoicePdfController extends Controller
         $user = $request->user();
 
         abort_unless(
-            $user && ($user->is_platform_admin || $user->schools()->whereKey($invoice->school_id)->exists()),
+            $user && (
+                $user->is_platform_admin
+                || (
+                    $user->schools()->whereKey($invoice->school_id)->exists()
+                    && (
+                        ! $user->hasSchoolRole($invoice->school_id, 'parent')
+                        || $user->guardians()
+                            ->where('school_id', $invoice->school_id)
+                            ->whereHas('studentLinks', fn ($query) => $query->where('student_id', $invoice->student_id))
+                            ->exists()
+                    )
+                )
+            ),
             403,
         );
 

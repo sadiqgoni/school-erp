@@ -25,7 +25,7 @@ class UsersTable
     {
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => Filament::getCurrentPanel()?->getId() === 'school'
-                ? $query->whereHas('schools', fn (Builder $query) => $query->whereKey(Filament::getTenant()?->getKey()))
+                ? self::schoolPanelUsersQuery($query)
                 : $query)
             ->columns([
                 TextColumn::make('name')
@@ -35,19 +35,9 @@ class UsersTable
                     ->searchable(),
                 TextColumn::make('school_role')
                     ->label('Role')
-                    ->state(fn (User $record): string => match ($record->roleForSchool(Filament::getTenant())) {
-                        'school_admin' => 'School admin',
-                        'teacher' => 'Teacher',
-                        'staff' => 'Staff',
-                        default => 'Not assigned',
-                    })
+                    ->state(fn (User $record): string => self::roleLabel($record))
                     ->badge()
-                    ->color(fn (User $record): string => match ($record->roleForSchool(Filament::getTenant())) {
-                        'school_admin' => 'success',
-                        'teacher' => 'info',
-                        'staff' => 'gray',
-                        default => 'warning',
-                    })
+                    ->color(fn (User $record): string => self::roleColor($record))
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school'),
                 TextColumn::make('schools.name')
                     ->badge()
@@ -110,6 +100,7 @@ class UsersTable
                                 'school_admin' => 'School admin',
                                 'teacher' => 'Teacher',
                                 'staff' => 'Staff',
+                                'parent' => 'Parent',
                             ])
                             ->required(),
                     ])
@@ -120,8 +111,11 @@ class UsersTable
                             return;
                         }
 
-                        $record->schools()->updateExistingPivot($tenant->getKey(), [
-                            'role' => $data['role'],
+                        $record->schools()->syncWithoutDetaching([
+                            $tenant->getKey() => [
+                                'role' => $data['role'],
+                                'is_primary' => false,
+                            ],
                         ]);
 
                         Notification::make()
@@ -138,5 +132,57 @@ class UsersTable
                     DeleteBulkAction::make(),
                 ])->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
             ]);
+    }
+
+    protected static function schoolPanelUsersQuery(Builder $query): Builder
+    {
+        $tenant = Filament::getTenant();
+
+        return $query->where(function (Builder $query) use ($tenant): void {
+            $query
+                ->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey()))
+                ->orWhereHas('guardians', fn (Builder $query) => $query
+                    ->where('school_id', $tenant?->getKey())
+                    ->whereHas('studentLinks.student'));
+        });
+    }
+
+    protected static function roleLabel(User $user): string
+    {
+        return match (self::roleForTenant($user)) {
+            'school_admin' => 'School admin',
+            'teacher' => 'Teacher',
+            'staff' => 'Staff',
+            'parent' => 'Parent',
+            default => 'Not assigned',
+        };
+    }
+
+    protected static function roleColor(User $user): string
+    {
+        return match (self::roleForTenant($user)) {
+            'school_admin' => 'success',
+            'teacher' => 'info',
+            'parent' => 'warning',
+            'staff' => 'gray',
+            default => 'danger',
+        };
+    }
+
+    protected static function roleForTenant(User $user): ?string
+    {
+        $tenant = Filament::getTenant();
+        $role = $user->roleForSchool($tenant);
+
+        if ($role) {
+            return $role;
+        }
+
+        return $user->guardians()
+            ->where('school_id', $tenant?->getKey())
+            ->whereHas('studentLinks.student')
+            ->exists()
+                ? 'parent'
+                : null;
     }
 }

@@ -19,7 +19,7 @@ class EditSchoolProfile extends EditTenantProfile
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user?->is_active && ($user->is_platform_admin || $user->schools()->whereKey($tenant)->exists()));
+        return (bool) ($user?->is_active && $user->schools()->withoutGlobalScopes()->whereKey($tenant)->exists());
     }
 
     public function form(Schema $schema): Schema

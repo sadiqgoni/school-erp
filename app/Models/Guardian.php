@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable([
     'school_id',
+    'user_id',
     'name',
     'phone',
     'alternate_phone',
@@ -34,8 +35,18 @@ class Guardian extends Model
         return $this->belongsTo(School::class);
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function studentLinks(): HasMany
     {
         return $this->hasMany(GuardianStudent::class);
+    }
+
+    public function communicationLogs(): HasMany
+    {
+        return $this->hasMany(CommunicationLog::class);
     }
 }

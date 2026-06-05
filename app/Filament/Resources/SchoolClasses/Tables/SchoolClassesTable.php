@@ -5,15 +5,19 @@ namespace App\Filament\Resources\SchoolClasses\Tables;
 use App\Models\AcademicYear;
 use App\Models\SchoolClass;
 use App\Models\Staff;
+use App\Models\Student;
 use App\Models\TeachingAssignment;
 use App\Models\Term;
+use App\Support\StudentClassPlacement;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -60,6 +64,11 @@ class SchoolClassesTable
                     ->badge()
                     ->color('success')
                     ->toggleable(),
+                TextColumn::make('enrollments_count')
+                    ->counts('enrollments')
+                    ->label('Students')
+                    ->badge()
+                    ->color('info'),
                 IconColumn::make('is_active')
                     ->boolean(),
             ])
@@ -71,6 +80,89 @@ class SchoolClassesTable
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
             ])
             ->recordActions([
+                Action::make('addStudents')
+                    ->label('Add Students')
+                    ->icon('heroicon-o-user-plus')
+                    ->color('success')
+                    ->modalHeading(fn (SchoolClass $record): string => "Add students to {$record->name}")
+                    ->modalSubmitActionLabel('Save placements')
+                    ->schema(fn (SchoolClass $record): array => [
+                        Select::make('academic_year_id')
+                            ->label('Academic year')
+                            ->options(fn (): array => AcademicYear::query()
+                                ->where('school_id', $record->school_id)
+                                ->orderByDesc('starts_on')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->default(fn (): ?int => AcademicYear::query()
+                                ->where('school_id', $record->school_id)
+                                ->where('is_current', true)
+                                ->value('id'))
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Select::make('term_id')
+                            ->label('Term')
+                            ->options(fn (): array => Term::query()
+                                ->where('school_id', $record->school_id)
+                                ->orderBy('academic_year_id')
+                                ->orderBy('position')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->default(fn (): ?int => Term::query()
+                                ->where('school_id', $record->school_id)
+                                ->where('is_current', true)
+                                ->value('id'))
+                            ->searchable()
+                            ->preload(),
+                        Select::make('class_section_id')
+                            ->label('Arm')
+                            ->options(fn (): array => $record->sections()
+                                ->orderBy('name')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->visible(fn (): bool => $record->sections()->exists())
+                            ->searchable()
+                            ->preload(),
+                        Select::make('student_ids')
+                            ->label('Students')
+                            ->multiple()
+                            ->options(fn (): array => Student::query()
+                                ->where('school_id', $record->school_id)
+                                ->where('status', 'active')
+                                ->orderBy('last_name')
+                                ->orderBy('first_name')
+                                ->get()
+                                ->mapWithKeys(fn (Student $student): array => [$student->getKey() => "{$student->full_name} ({$student->admission_number})"])
+                                ->all())
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->columnSpanFull(),
+                        DatePicker::make('enrolled_on')
+                            ->label('Placement date')
+                            ->default(today()),
+                        Select::make('status')
+                            ->default('active')
+                            ->options([
+                                'active' => 'Active',
+                                'completed' => 'Completed',
+                                'transferred' => 'Transferred',
+                                'withdrawn' => 'Withdrawn',
+                            ])
+                            ->required(),
+                        Textarea::make('remarks')
+                            ->columnSpanFull(),
+                    ])
+                    ->action(function (SchoolClass $record, array $data): void {
+                        $saved = app(StudentClassPlacement::class)->placeStudents($record, $data);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Students added')
+                            ->body("Saved {$saved} student placement(s) for {$record->name}.")
+                            ->send();
+                    }),
                 Action::make('assignTeachers')
                     ->label('Assign Form Teachers')
                     ->icon('heroicon-o-academic-cap')

@@ -21,7 +21,9 @@ class SchoolDashboardSummary extends Widget
 
     public static function canView(): bool
     {
-        return ! Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher');
+        $user = Filament::auth()->user();
+
+        return ! $user?->hasSchoolRole(Filament::getTenant(), ['teacher', 'parent']);
     }
 
     protected function getViewData(): array

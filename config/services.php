@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    'payments' => [
+        'default' => env('PAYMENT_PROVIDER', 'paystack'),
+        'currency' => env('PAYMENT_CURRENCY', 'NGN'),
+    ],
+
+    'paystack' => [
+        'public_key' => env('PAYSTACK_PUBLIC_KEY'),
+        'secret_key' => env('PAYSTACK_SECRET_KEY'),
+        'webhook_secret' => env('PAYSTACK_WEBHOOK_SECRET'),
+    ],
+
+    'flutterwave' => [
+        'public_key' => env('FLUTTERWAVE_PUBLIC_KEY'),
+        'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+        'webhook_secret' => env('FLUTTERWAVE_WEBHOOK_SECRET'),
+    ],
+
+    'communications' => [
+        'default_channels' => array_filter(explode(',', env('COMMUNICATION_CHANNELS', 'sms,email'))),
+        'sms_provider' => env('SMS_PROVIDER'),
+        'whatsapp_provider' => env('WHATSAPP_PROVIDER'),
+    ],
+
 ];

@@ -24,6 +24,10 @@ trait SchoolPanelResource
             return false;
         }
 
+        if (static::isParentUser()) {
+            return false;
+        }
+
         return ! static::isTeacherUser() || static::isTeacherResource();
     }
 
@@ -38,7 +42,7 @@ trait SchoolPanelResource
             return false;
         }
 
-        return ! static::isTeacherUser() && parent::canCreate();
+        return ! static::isTeacherUser() && ! static::isParentUser() && parent::canCreate();
     }
 
     public static function canView(Model $record): bool
@@ -52,7 +56,7 @@ trait SchoolPanelResource
             return false;
         }
 
-        return ! static::isTeacherUser() && parent::canEdit($record);
+        return ! static::isTeacherUser() && ! static::isParentUser() && parent::canEdit($record);
     }
 
     protected static function isSchoolPanel(): bool
@@ -66,6 +70,10 @@ trait SchoolPanelResource
             return false;
         }
 
+        if (static::isParentUser()) {
+            return false;
+        }
+
         return ! static::isTeacherUser() || static::isTeacherResource();
     }
 
@@ -74,6 +82,13 @@ trait SchoolPanelResource
         $user = Filament::auth()->user();
 
         return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'teacher');
+    }
+
+    protected static function isParentUser(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'parent');
     }
 
     protected static function isTeacherResource(): bool

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CompiledResults\Pages;
 
 use App\Filament\Resources\CompiledResults\CompiledResultResource;
+use App\Filament\Support\ClassTabs;
 use App\Models\CompiledResult;
 use App\Models\Enrollment;
 use App\Models\Exam;
@@ -59,6 +60,11 @@ class ListCompiledResults extends ListRecords
                 ])
                 ->action(fn (array $data) => self::compile($data)),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::studentEnrollment(CompiledResult::class, 'All results');
     }
 
     public static function compile(array $data): void

@@ -54,6 +54,7 @@ class StudentInvoiceForm
                             Select::make('invoice_type')
                                 ->required()
                                 ->default('standard')
+                                ->live()
                                 ->options([
                                     'standard' => 'Standard invoice',
                                     'emergency' => 'Emergency / one-off invoice',
@@ -116,6 +117,8 @@ class StudentInvoiceForm
                                         ->numeric()
                                         ->prefix('NGN')
                                         ->required()
+                                        ->disabled(fn (Get $get): bool => $get('../../invoice_type') === 'standard')
+                                        ->dehydrated()
                                         ->helperText('For standard invoices this can come from fee structure; emergency invoices can be entered manually.')
                                         ->afterStateHydrated(function (Get $get, Set $set): void {
                                             $feeTypeId = $get('fee_type_id');

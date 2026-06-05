@@ -22,7 +22,7 @@ class ListUsers extends ListRecords
 
             return [
                 'all' => Tab::make('All users')
-                    ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey()))->count()),
+                    ->badge(self::schoolPanelUsersQuery(User::query(), $tenant?->getKey())->count()),
                 'admins' => Tab::make('School admins')
                     ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'school_admin'))->count())
                     ->query(fn (Builder $query): Builder => $query->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'school_admin'))),
@@ -32,6 +32,9 @@ class ListUsers extends ListRecords
                 'staff' => Tab::make('Staff')
                     ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'staff'))->count())
                     ->query(fn (Builder $query): Builder => $query->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'staff'))),
+                'parents' => Tab::make('Parents')
+                    ->badge(self::parentUsersQuery(User::query(), $tenant?->getKey())->count())
+                    ->query(fn (Builder $query): Builder => self::parentUsersQuery($query, $tenant?->getKey())),
             ];
         }
 
@@ -64,5 +67,27 @@ class ListUsers extends ListRecords
         return [
             CreateAction::make(),
         ];
+    }
+
+    protected static function schoolPanelUsersQuery(Builder $query, mixed $schoolId): Builder
+    {
+        return $query->where(function (Builder $query) use ($schoolId): void {
+            $query
+                ->whereHas('schools', fn (Builder $query) => $query->whereKey($schoolId))
+                ->orWhereHas('guardians', fn (Builder $query) => $query
+                    ->where('school_id', $schoolId)
+                    ->whereHas('studentLinks.student'));
+        });
+    }
+
+    protected static function parentUsersQuery(Builder $query, mixed $schoolId): Builder
+    {
+        return $query->where(function (Builder $query) use ($schoolId): void {
+            $query
+                ->whereHas('schools', fn (Builder $query) => $query->whereKey($schoolId)->where('school_user.role', 'parent'))
+                ->orWhereHas('guardians', fn (Builder $query) => $query
+                    ->where('school_id', $schoolId)
+                    ->whereHas('studentLinks.student'));
+        });
     }
 }

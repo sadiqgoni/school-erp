@@ -4,6 +4,7 @@ namespace App\Filament\Resources\StudentScores\Pages;
 
 use App\Filament\Resources\CompiledResults\Pages\ListCompiledResults;
 use App\Filament\Resources\StudentScores\StudentScoreResource;
+use App\Filament\Support\ClassTabs;
 use App\Models\AssessmentComponent;
 use App\Models\ClassSection;
 use App\Models\ClassSubject;
@@ -632,5 +633,10 @@ class ListStudentScores extends ListRecords
             ])
             ->values()
             ->all());
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::studentEnrollment(StudentScore::class, 'All scores');
     }
 }

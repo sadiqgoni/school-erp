@@ -17,7 +17,19 @@ class ReportCardPdfController extends Controller
         $user = $request->user();
 
         abort_unless(
-            $user && ($user->is_platform_admin || $user->schools()->whereKey($reportCard->school_id)->exists()),
+            $user && (
+                $user->is_platform_admin
+                || (
+                    $user->schools()->whereKey($reportCard->school_id)->exists()
+                    && (
+                        ! $user->hasSchoolRole($reportCard->school_id, 'parent')
+                        || $user->guardians()
+                            ->where('school_id', $reportCard->school_id)
+                            ->whereHas('studentLinks', fn ($query) => $query->where('student_id', $reportCard->student_id))
+                            ->exists()
+                    )
+                )
+            ),
             403,
         );
 

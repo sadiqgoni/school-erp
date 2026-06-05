@@ -4,7 +4,9 @@ namespace App\Filament\Resources\ReportCards\Pages;
 
 use App\Filament\Resources\CompiledResults\Pages\ListCompiledResults;
 use App\Filament\Resources\ReportCards\ReportCardResource;
+use App\Filament\Support\ClassTabs;
 use App\Models\Exam;
+use App\Models\ReportCard;
 use App\Support\TeacherWorkspace;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -56,5 +58,10 @@ class ListReportCards extends ListRecords
             CreateAction::make()
                 ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::studentEnrollment(ReportCard::class, 'All report cards');
     }
 }

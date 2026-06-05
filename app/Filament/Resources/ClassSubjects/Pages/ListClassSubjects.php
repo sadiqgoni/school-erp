@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ClassSubjects\Pages;
 
 use App\Filament\Resources\ClassSubjects\ClassSubjectResource;
+use App\Filament\Support\ClassTabs;
 use App\Models\ClassSubject;
 use App\Models\SchoolClass;
 use App\Models\Staff;
@@ -108,5 +109,10 @@ class ListClassSubjects extends ListRecords
             CreateAction::make()
                 ->visible(fn (): bool => ! TeacherWorkspace::isTeacher()),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::direct(ClassSubject::class, 'All class subjects');
     }
 }

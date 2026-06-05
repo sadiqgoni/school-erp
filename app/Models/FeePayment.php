@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['school_id', 'student_invoice_id', 'student_id', 'receipt_number', 'payer', 'payment_date', 'amount', 'payment_method', 'bank_account_id', 'asset_account_id', 'income_account_id', 'reference', 'received_by_id', 'status', 'notes'])]
+#[Fillable(['school_id', 'student_invoice_id', 'student_id', 'receipt_number', 'payer', 'payment_date', 'amount', 'payment_method', 'payment_provider', 'provider_transaction_id', 'provider_payload', 'bank_account_id', 'asset_account_id', 'income_account_id', 'reference', 'received_by_id', 'status', 'notes'])]
 class FeePayment extends Model
 {
     use HasFactory;
@@ -35,6 +35,7 @@ class FeePayment extends Model
         return [
             'payment_date' => 'date',
             'amount' => 'decimal:2',
+            'provider_payload' => 'array',
         ];
     }
 
@@ -71,6 +72,11 @@ class FeePayment extends Model
     public function incomeAccount(): BelongsTo
     {
         return $this->belongsTo(LedgerAccount::class, 'income_account_id');
+    }
+
+    public function communicationLogs()
+    {
+        return $this->morphMany(CommunicationLog::class, 'related');
     }
 
     public function syncTransactions(): void
