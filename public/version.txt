@@ -1,0 +1,3 @@
+school-erp
+build: public/build/manifest.json
+panel-theme: resources/css/filament/panel-theme.css

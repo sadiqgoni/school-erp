@@ -1,24 +1,16 @@
 {
   "resources/css/app.css": {
-    "file": "assets/app-ke_GiMKs.css",
-    "name": "app",
-    "names": [
-      "app.css"
-    ],
+    "file": "assets/app-CCLh0mMG.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
   "resources/css/filament/panel-theme.css": {
-    "file": "assets/panel-theme-CTl2m2aE.css",
-    "name": "panel-theme",
-    "names": [
-      "panel-theme.css"
-    ],
+    "file": "assets/panel-theme-Dri1zur4.css",
     "src": "resources/css/filament/panel-theme.css",
     "isEntry": true
   },
   "resources/js/app.js": {
-    "file": "assets/app-BLa98ks6.js",
+    "file": "assets/app-l0sNRNKZ.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true
