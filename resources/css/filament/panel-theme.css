@@ -752,6 +752,36 @@ body {
     font-weight: 700;
 }
 
+.school-auth-form .fi-fo-field-wrp-label,
+.school-auth-form .fi-fo-field-wrp-label *,
+.school-auth-form label,
+.school-auth-form label *,
+.school-auth-form .fi-checkbox-list-option-label,
+.school-auth-form .fi-checkbox-list-option-label *,
+.school-auth-form .fi-fo-checkbox-list-option-label,
+.school-auth-form .fi-fo-checkbox-list-option-label *,
+.school-auth-form .fi-fo-field-wrp-hint,
+.school-auth-form .fi-fo-field-wrp-hint * {
+    color: #334155 !important;
+}
+
+.school-auth-form .fi-fo-field-wrp-label .fi-required-mark,
+.school-auth-form .fi-fo-field-wrp-label sup,
+.school-auth-form label .fi-required-mark,
+.school-auth-form label sup {
+    color: #dc2626 !important;
+}
+
+.school-auth-form input[type="checkbox"] {
+    border-color: #94a3b8 !important;
+    background-color: #ffffff !important;
+}
+
+.school-auth-form input[type="checkbox"]:checked {
+    border-color: #0f766e !important;
+    background-color: #0f766e !important;
+}
+
 .school-auth-help {
     margin-top: 2.5rem;
     display: grid;
