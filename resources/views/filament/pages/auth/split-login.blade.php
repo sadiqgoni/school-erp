@@ -115,7 +115,10 @@
 
                 <div class="school-auth-help">
                     @if ($isAdminPanel)
-                        <p>New school? <a href="{{ filament()->getRegistrationUrl() }}">Create platform access</a></p>
+                        <a class="school-auth-register-link" href="{{ filament()->getRegistrationUrl() }}">
+                            Create new admin account
+                        </a>
+                        <p>Use this if you do not already have platform access.</p>
                     @else
                         <p>Need an account? Contact your school administrator.</p>
                     @endif
