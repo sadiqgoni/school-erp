@@ -24,7 +24,7 @@ class PaystackGateway
                 'email' => $this->payerEmail($invoice),
                 'currency' => config('services.payments.currency', 'NGN'),
                 'reference' => $reference,
-                'callback_url' => route('payments.paystack.callback'),
+                'callback_url' => route('payments.paystack.callback', ['reference' => $reference]),
                 'metadata' => [
                     'invoice_id' => $invoice->getKey(),
                     'invoice_number' => $invoice->invoice_number,

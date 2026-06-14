@@ -11,7 +11,7 @@ class PaystackPaymentCallbackController extends Controller
 {
     public function __invoke(Request $request, PaystackGateway $gateway, PaymentSettlementService $settlement)
     {
-        $reference = (string) $request->query('reference');
+        $reference = (string) ($request->query('reference') ?: $request->query('trxref'));
 
         abort_if(blank($reference), 404);
 

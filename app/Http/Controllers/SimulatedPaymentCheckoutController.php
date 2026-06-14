@@ -19,6 +19,13 @@ class SimulatedPaymentCheckoutController extends Controller
             ->where('payment_reference', $reference)
             ->firstOrFail();
 
+        if ((float) $invoice->balance <= 0 || $invoice->payment_status === 'paid') {
+            return redirect()->route('payments.receipt', [
+                'reference' => $invoice->payment_reference,
+                'status' => 'success',
+            ]);
+        }
+
         return view('payments.simulated-checkout', [
             'invoice' => $invoice,
         ]);

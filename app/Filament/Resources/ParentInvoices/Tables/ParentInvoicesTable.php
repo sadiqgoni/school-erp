@@ -82,8 +82,7 @@ class ParentInvoicesTable
                     ->icon('heroicon-o-credit-card')
                     ->color('success')
                     ->visible(fn (StudentInvoice $record): bool => (float) $record->balance > 0 && $record->status !== 'cancelled')
-                    ->url(fn (StudentInvoice $record): string => self::paymentUrl($record))
-                    ->openUrlInNewTab(),
+                    ->url(fn (StudentInvoice $record): string => self::paymentUrl($record)),
             ])
             ->defaultSort('invoice_date', 'desc')
             ->emptyStateHeading('No invoices yet')

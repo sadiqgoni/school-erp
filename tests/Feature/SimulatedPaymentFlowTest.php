@@ -76,6 +76,13 @@ class SimulatedPaymentFlowTest extends TestCase
             'channel' => 'sms',
             'recipient_contact' => '+2348011111111',
         ]);
+
+        $this
+            ->get($invoice->payment_url)
+            ->assertRedirect(route('payments.receipt', [
+                'reference' => $invoice->payment_reference,
+                'status' => 'success',
+            ]));
     }
 
     public function test_simulated_payment_link_can_mark_gateway_failure_without_creating_payment(): void

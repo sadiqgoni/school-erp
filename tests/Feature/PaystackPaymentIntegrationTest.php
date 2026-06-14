@@ -44,7 +44,9 @@ class PaystackPaymentIntegrationTest extends TestCase
         Http::assertSent(fn ($request): bool => $request->url() === 'https://api.paystack.co/transaction/initialize'
             && $request['amount'] === 2500000
             && $request['email'] === 'guardian@example.com'
-            && $request['currency'] === 'NGN');
+            && $request['currency'] === 'NGN'
+            && str_starts_with((string) $request['callback_url'], route('payments.paystack.callback'))
+            && str_contains((string) $request['callback_url'], 'reference='));
     }
 
     public function test_paystack_webhook_settles_successful_payment_once(): void
@@ -161,6 +163,56 @@ class PaystackPaymentIntegrationTest extends TestCase
             ->get('/payments/paystack/callback?reference=PAYSTACK-CALLBACK-001')
             ->assertRedirect(route('payments.receipt', [
                 'reference' => 'PAYSTACK-CALLBACK-001',
+                'status' => 'success',
+            ]));
+
+        $this->assertDatabaseHas(StudentInvoice::class, [
+            'id' => $invoice->getKey(),
+            'status' => 'paid',
+            'payment_status' => 'paid',
+        ]);
+    }
+
+    public function test_paystack_callback_accepts_trxref_when_reference_is_missing(): void
+    {
+        $this->seed();
+        config()->set('services.paystack.secret_key', 'sk_test_demo');
+
+        $invoice = StudentInvoice::query()
+            ->where('invoice_number', 'INV-2026-0001')
+            ->firstOrFail();
+
+        $invoice->forceFill([
+            'payment_provider' => 'paystack',
+            'payment_reference' => 'PAYSTACK-TRXREF-001',
+            'payment_url' => 'https://checkout.paystack.com/demo-trxref',
+            'payment_status' => 'initialized',
+        ])->save();
+
+        Http::fake([
+            'api.paystack.co/transaction/verify/PAYSTACK-TRXREF-001' => Http::response([
+                'status' => true,
+                'message' => 'Verification successful',
+                'data' => [
+                    'id' => 55667788,
+                    'status' => 'success',
+                    'reference' => 'PAYSTACK-TRXREF-001',
+                    'amount' => 2500000,
+                    'paidAt' => '2026-09-10T10:15:00.000Z',
+                    'customer' => [
+                        'email' => 'guardian@example.com',
+                    ],
+                    'authorization' => [
+                        'channel' => 'card',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $this
+            ->get('/payments/paystack/callback?trxref=PAYSTACK-TRXREF-001')
+            ->assertRedirect(route('payments.receipt', [
+                'reference' => 'PAYSTACK-TRXREF-001',
                 'status' => 'success',
             ]));
 
