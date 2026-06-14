@@ -109,7 +109,6 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
         return $this->schools()
             ->withoutGlobalScopes()
-            ->when($panel->getId() === 'school', fn ($query) => $query->whereNotNull('division'))
             ->orderByDesc('school_user.is_primary')
             ->orderBy('school_user.school_id')
             ->first();
@@ -173,7 +172,6 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     {
         return School::query()
             ->withoutGlobalScopes()
-            ->whereNotNull('division')
             ->whereHas('guardians', fn (Builder $query) => $query
                 ->where('user_id', $this->getKey())
                 ->whereHas('studentLinks.student'))
@@ -183,7 +181,6 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     protected function schoolPanelSchoolsQuery(): BelongsToMany
     {
         return $this->schools()
-            ->withoutGlobalScopes()
-            ->whereNotNull('division');
+            ->withoutGlobalScopes();
     }
 }

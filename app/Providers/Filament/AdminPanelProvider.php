@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\SplitLogin;
-use App\Filament\Pages\Auth\Register;
 use App\Filament\Resources\Schools\SchoolResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Http\Middleware\EnsureActiveUser;
@@ -32,7 +31,6 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->login(SplitLogin::class)
-            ->registration(Register::class)
             ->path('admin')
             ->brandName('School Dice Admin')
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
@@ -71,9 +69,9 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                RedirectSchoolUserFromAdmin::class,
                 Authenticate::class,
                 EnsureActiveUser::class,
+                RedirectSchoolUserFromAdmin::class,
             ]);
     }
 }

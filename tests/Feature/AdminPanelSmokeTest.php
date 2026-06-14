@@ -176,6 +176,60 @@ class AdminPanelSmokeTest extends TestCase
         }
     }
 
+    public function test_school_admin_linked_to_main_school_record_can_access_school_portal(): void
+    {
+        User::query()->create([
+            'name' => 'Platform Admin',
+            'email' => 'platform@example.com',
+            'password' => Hash::make('password'),
+            'is_platform_admin' => true,
+            'is_active' => true,
+        ]);
+
+        $school = School::query()->create([
+            'name' => 'Main Record School',
+            'code' => 'MAIN-001',
+            'slug' => 'main-record-school',
+            'email' => 'main@example.com',
+            'phone' => '+2348000000013',
+            'address' => 'Main address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        $schoolAdmin = User::query()->create([
+            'name' => 'Main School Admin',
+            'email' => 'main-admin@example.com',
+            'password' => Hash::make('password'),
+            'is_platform_admin' => false,
+            'is_active' => true,
+        ]);
+
+        $schoolAdmin->schools()->attach($school, [
+            'role' => 'school_admin',
+            'is_primary' => true,
+        ]);
+
+        $this
+            ->actingAs($schoolAdmin)
+            ->get("/portal/{$school->slug}")
+            ->assertOk();
+
+        $this
+            ->actingAs($schoolAdmin)
+            ->get('/admin')
+            ->assertRedirect("/portal/{$school->slug}");
+    }
+
+    public function test_admin_registration_route_is_not_public(): void
+    {
+        $this
+            ->get('/admin/register')
+            ->assertNotFound();
+    }
+
     public function test_school_portal_hides_school_selector_on_tenant_forms(): void
     {
         $this->seed();
