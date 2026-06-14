@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Tenancy;
 
 use App\Filament\Resources\Schools\Schemas\SchoolForm;
+use App\Models\School;
 use Filament\Facades\Filament;
 use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Schema;
@@ -25,5 +26,20 @@ class EditSchoolProfile extends EditTenantProfile
     public function form(Schema $schema): Schema
     {
         return SchoolForm::configure($schema, includeAdminAccount: false, isTenantProfile: true);
+    }
+
+    protected function afterSave(): void
+    {
+        if (! $this->tenant instanceof School || blank($this->tenant->logo_path)) {
+            return;
+        }
+
+        $parentSchoolId = $this->tenant->parent_school_id ?: $this->tenant->getKey();
+
+        School::query()
+            ->withoutGlobalScopes()
+            ->whereKey($parentSchoolId)
+            ->orWhere('parent_school_id', $parentSchoolId)
+            ->update(['logo_path' => $this->tenant->logo_path]);
     }
 }

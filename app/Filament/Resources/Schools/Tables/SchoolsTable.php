@@ -26,6 +26,7 @@ class SchoolsTable
                     ->label('Logo')
                     ->disk('public')
                     ->visibility('public')
+                    ->state(fn (School $record): ?string => $record->displayLogoPath())
                     ->defaultImageUrl(asset('images/branding/school-dice-logo-icon.png'))
                     ->circular(),
                 TextColumn::make('name')

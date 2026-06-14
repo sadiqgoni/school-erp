@@ -61,6 +61,7 @@ class SchoolResource extends Resource
                                     ->label('Logo')
                                     ->disk('public')
                                     ->visibility('public')
+                                    ->state(fn (School $record): ?string => $record->displayLogoPath())
                                     ->defaultImageUrl(asset('images/branding/school-dice-logo-icon.png'))
                                     ->height(120),
                                 TextEntry::make('name')

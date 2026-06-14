@@ -164,15 +164,44 @@ class School extends Model implements HasAvatar, HasName
 
     public function getFilamentAvatarUrl(): ?string
     {
-        if (blank($this->logo_path)) {
-            return null;
-        }
+        return $this->logoUrl();
+    }
 
-        if (str_starts_with($this->logo_path, 'http://') || str_starts_with($this->logo_path, 'https://')) {
+    public function displayLogoPath(): ?string
+    {
+        if (filled($this->logo_path)) {
             return $this->logo_path;
         }
 
-        return Storage::disk('public')->url($this->logo_path);
+        if ($this->parent_school_id) {
+            return self::query()
+                ->withoutGlobalScopes()
+                ->whereKey($this->parent_school_id)
+                ->value('logo_path');
+        }
+
+        return self::query()
+            ->withoutGlobalScopes()
+            ->where('parent_school_id', $this->getKey())
+            ->whereNotNull('logo_path')
+            ->where('logo_path', '!=', '')
+            ->orderBy('id')
+            ->value('logo_path');
+    }
+
+    public function logoUrl(): ?string
+    {
+        $logoPath = $this->displayLogoPath();
+
+        if (blank($logoPath)) {
+            return null;
+        }
+
+        if (str_starts_with($logoPath, 'http://') || str_starts_with($logoPath, 'https://')) {
+            return $logoPath;
+        }
+
+        return Storage::disk('public')->url($logoPath);
     }
 
     public function baseSchoolName(): string

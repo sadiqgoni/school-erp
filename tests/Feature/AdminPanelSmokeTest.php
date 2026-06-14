@@ -57,7 +57,7 @@ class AdminPanelSmokeTest extends TestCase
     {
         $this->seed();
 
-        $admin = User::query()->where('email', 'admin')->firstOrFail();
+        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
         $admin->update(['is_active' => false]);
 
         $this
@@ -228,6 +228,40 @@ class AdminPanelSmokeTest extends TestCase
         $this
             ->get('/admin/register')
             ->assertNotFound();
+    }
+
+    public function test_parent_school_uses_section_logo_when_parent_logo_is_empty(): void
+    {
+        $school = School::query()->create([
+            'name' => 'Logo Parent School',
+            'code' => 'LOGO-001',
+            'slug' => 'logo-parent-school',
+            'email' => 'logo-parent@example.com',
+            'phone' => '+2348000000014',
+            'address' => 'Logo address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        School::query()->create([
+            'parent_school_id' => $school->getKey(),
+            'division' => School::DIVISION_PRIMARY,
+            'name' => 'Logo Parent School',
+            'code' => 'LOGO-PRI',
+            'slug' => 'logo-parent-school-primary',
+            'logo_path' => 'school-logos/logo.png',
+            'email' => 'logo-primary@example.com',
+            'phone' => '+2348000000015',
+            'address' => 'Logo address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        $this->assertSame('school-logos/logo.png', $school->fresh()->displayLogoPath());
     }
 
     public function test_school_portal_hides_school_selector_on_tenant_forms(): void
