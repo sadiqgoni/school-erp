@@ -53,6 +53,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Platform Admin',
                 'password' => Hash::make('password'),
+                'role' => User::ROLE_SUPERADMIN,
                 'is_platform_admin' => true,
                 'is_active' => true,
             ],
@@ -87,7 +88,7 @@ class DatabaseSeeder extends Seeder
 
         $admin->schools()->syncWithoutDetaching([
             $school->id => [
-                'role' => 'platform_admin',
+                'role' => User::ROLE_SUPERADMIN,
                 'is_primary' => true,
             ],
         ]);
@@ -97,6 +98,7 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'Demo School Admin',
                 'password' => Hash::make('password'),
+                'role' => User::ROLE_USER,
                 'is_platform_admin' => false,
                 'is_active' => true,
             ],
@@ -104,7 +106,7 @@ class DatabaseSeeder extends Seeder
 
         $schoolAdmin->schools()->syncWithoutDetaching([
             $school->id => [
-                'role' => 'school_admin',
+                'role' => User::SCHOOL_ROLE_ADMIN,
                 'is_primary' => true,
             ],
         ]);

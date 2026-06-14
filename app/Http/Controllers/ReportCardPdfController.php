@@ -18,7 +18,7 @@ class ReportCardPdfController extends Controller
 
         abort_unless(
             $user && (
-                $user->is_platform_admin
+                $user->isSuperAdmin()
                 || (
                     $user->schools()->whereKey($reportCard->school_id)->exists()
                     && (

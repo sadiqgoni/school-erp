@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('role')->default('school_admin');
+            $table->string('role')->default('admin');
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
 

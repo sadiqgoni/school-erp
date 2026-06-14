@@ -163,7 +163,7 @@ class SchoolResource extends Resource
     public static function shouldRegisterNavigation(): bool
     {
         return Filament::getCurrentPanel()?->getId() === 'admin'
-            && (bool) Filament::auth()->user()?->is_platform_admin;
+            && (bool) Filament::auth()->user()?->isSuperAdmin();
     }
 
     public static function canViewAny(): bool

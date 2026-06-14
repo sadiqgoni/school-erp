@@ -23,15 +23,15 @@ class ListUsers extends ListRecords
             return [
                 'all' => Tab::make('All users')
                     ->badge(self::schoolPanelUsersQuery(User::query(), $tenant?->getKey())->count()),
-                'admins' => Tab::make('School admins')
-                    ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'school_admin'))->count())
-                    ->query(fn (Builder $query): Builder => $query->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'school_admin'))),
+                'admins' => Tab::make('Admins')
+                    ->badge(self::schoolRoleUsersQuery(User::query(), $tenant?->getKey(), [User::SCHOOL_ROLE_ADMIN, 'school_admin'])->count())
+                    ->query(fn (Builder $query): Builder => self::schoolRoleUsersQuery($query, $tenant?->getKey(), [User::SCHOOL_ROLE_ADMIN, 'school_admin'])),
                 'teachers' => Tab::make('Teachers')
-                    ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'teacher'))->count())
-                    ->query(fn (Builder $query): Builder => $query->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'teacher'))),
+                    ->badge(self::schoolRoleUsersQuery(User::query(), $tenant?->getKey(), User::SCHOOL_ROLE_TEACHER)->count())
+                    ->query(fn (Builder $query): Builder => self::schoolRoleUsersQuery($query, $tenant?->getKey(), User::SCHOOL_ROLE_TEACHER)),
                 'staff' => Tab::make('Staff')
-                    ->badge(User::query()->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'staff'))->count())
-                    ->query(fn (Builder $query): Builder => $query->whereHas('schools', fn (Builder $query) => $query->whereKey($tenant?->getKey())->where('school_user.role', 'staff'))),
+                    ->badge(self::schoolRoleUsersQuery(User::query(), $tenant?->getKey(), User::SCHOOL_ROLE_STAFF)->count())
+                    ->query(fn (Builder $query): Builder => self::schoolRoleUsersQuery($query, $tenant?->getKey(), User::SCHOOL_ROLE_STAFF)),
                 'parents' => Tab::make('Parents')
                     ->badge(self::parentUsersQuery(User::query(), $tenant?->getKey())->count())
                     ->query(fn (Builder $query): Builder => self::parentUsersQuery($query, $tenant?->getKey())),
@@ -41,9 +41,9 @@ class ListUsers extends ListRecords
         $tabs = [
             'all' => Tab::make('All users')
                 ->badge(User::query()->count()),
-            'platform_admins' => Tab::make('Platform admins')
-                ->badge(User::query()->where('is_platform_admin', true)->count())
-                ->query(fn (Builder $query): Builder => $query->where('is_platform_admin', true)),
+            'superadmins' => Tab::make('Superadmins')
+                ->badge(self::superadminUsersQuery(User::query())->count())
+                ->query(fn (Builder $query): Builder => self::superadminUsersQuery($query)),
         ];
 
         School::query()
@@ -84,10 +84,27 @@ class ListUsers extends ListRecords
     {
         return $query->where(function (Builder $query) use ($schoolId): void {
             $query
-                ->whereHas('schools', fn (Builder $query) => $query->whereKey($schoolId)->where('school_user.role', 'parent'))
+                ->whereHas('schools', fn (Builder $query) => $query->whereKey($schoolId)->where('school_user.role', User::SCHOOL_ROLE_PARENT))
                 ->orWhereHas('guardians', fn (Builder $query) => $query
                     ->where('school_id', $schoolId)
                     ->whereHas('studentLinks.student'));
         });
+    }
+
+    /**
+     * @param  array<int, string>|string  $roles
+     */
+    protected static function schoolRoleUsersQuery(Builder $query, mixed $schoolId, array|string $roles): Builder
+    {
+        return $query->whereHas('schools', fn (Builder $query) => $query
+            ->whereKey($schoolId)
+            ->whereIn('school_user.role', (array) $roles));
+    }
+
+    protected static function superadminUsersQuery(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $query) => $query
+            ->where('role', User::ROLE_SUPERADMIN)
+            ->orWhere('is_platform_admin', true));
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
+use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -36,11 +37,12 @@ class UserForm
                         Select::make('school_role')
                             ->label('School role')
                             ->options([
-                                'school_admin' => 'School admin',
-                                'teacher' => 'Teacher',
-                                'staff' => 'Staff',
+                                User::SCHOOL_ROLE_ADMIN => 'Admin',
+                                User::SCHOOL_ROLE_TEACHER => 'Teacher',
+                                User::SCHOOL_ROLE_STAFF => 'Staff',
+                                User::SCHOOL_ROLE_PARENT => 'Parent',
                             ])
-                            ->default('staff')
+                            ->default(User::SCHOOL_ROLE_STAFF)
                             ->required()
                             ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
                             ->dehydrated(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school'),
@@ -51,7 +53,7 @@ class UserForm
                             ->preload()
                             ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                         Toggle::make('is_platform_admin')
-                            ->label('Platform admin')
+                            ->label('Superadmin')
                             ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                         Toggle::make('is_active')
                             ->default(true),

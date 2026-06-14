@@ -104,11 +104,11 @@ class AdminPanelSmokeTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_platform_admin_only_sees_explicitly_linked_school_sections_in_school_portal(): void
+    public function test_superadmin_can_open_any_school_portal_from_admin(): void
     {
         $this->seed();
 
-        $platformAdmin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+        $superadmin = User::query()->where('email', 'admin@example.com')->firstOrFail();
         $allowedSchool = School::query()->create([
             'name' => 'Allowed School',
             'code' => 'ALLOW-NUR',
@@ -137,25 +137,21 @@ class AdminPanelSmokeTest extends TestCase
             'is_active' => true,
         ]);
 
-        $platformAdmin->schools()->sync([
+        $superadmin->schools()->sync([
             $allowedSchool->getKey() => [
-                'role' => 'platform_admin',
+                'role' => User::ROLE_SUPERADMIN,
                 'is_primary' => true,
             ],
         ]);
 
-        $this->assertTrue($platformAdmin->fresh()->canAccessTenant($allowedSchool));
-        $this->assertFalse($platformAdmin->fresh()->canAccessTenant($blockedSchool));
+        $this->assertTrue($superadmin->fresh()->isSuperAdmin());
+        $this->assertTrue($superadmin->fresh()->canAccessTenant($allowedSchool));
+        $this->assertTrue($superadmin->fresh()->canAccessTenant($blockedSchool));
 
         $this
-            ->actingAs($platformAdmin)
-            ->get("/portal/{$allowedSchool->slug}")
-            ->assertOk();
-
-        $this
-            ->actingAs($platformAdmin)
+            ->actingAs($superadmin)
             ->get("/portal/{$blockedSchool->slug}")
-            ->assertNotFound();
+            ->assertOk();
     }
 
     public function test_school_user_is_redirected_from_admin_to_their_school_portal(): void
@@ -208,7 +204,7 @@ class AdminPanelSmokeTest extends TestCase
         ]);
 
         $schoolAdmin->schools()->attach($school, [
-            'role' => 'school_admin',
+            'role' => User::SCHOOL_ROLE_ADMIN,
             'is_primary' => true,
         ]);
 
@@ -302,7 +298,7 @@ class AdminPanelSmokeTest extends TestCase
 
         $teacher->schools()->syncWithoutDetaching([
             $school->getKey() => [
-                'role' => 'teacher',
+                'role' => User::SCHOOL_ROLE_TEACHER,
                 'is_primary' => false,
             ],
         ]);

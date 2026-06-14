@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\EditRecord;
@@ -24,7 +25,7 @@ class EditUser extends EditRecord
     protected function mutateFormDataBeforeFill(array $data): array
     {
         if (Filament::getCurrentPanel()?->getId() === 'school') {
-            $data['school_role'] = $this->record->roleForSchool(Filament::getTenant()) ?? 'staff';
+            $data['school_role'] = $this->record->roleForSchool(Filament::getTenant()) ?? User::SCHOOL_ROLE_STAFF;
         }
 
         return $data;

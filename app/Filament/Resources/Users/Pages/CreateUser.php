@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ class CreateUser extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $this->schoolRole = $data['school_role'] ?? 'staff';
+        $this->schoolRole = $data['school_role'] ?? User::SCHOOL_ROLE_STAFF;
         unset($data['school_role']);
 
         if (Filament::getCurrentPanel()?->getId() === 'school') {
@@ -33,7 +34,7 @@ class CreateUser extends CreateRecord
         if (Filament::getCurrentPanel()?->getId() === 'school' && $tenant) {
             $record->schools()->syncWithoutDetaching([
                 $tenant->getKey() => [
-                    'role' => $this->schoolRole ?: 'staff',
+                    'role' => $this->schoolRole ?: User::SCHOOL_ROLE_STAFF,
                     'is_primary' => false,
                 ],
             ]);

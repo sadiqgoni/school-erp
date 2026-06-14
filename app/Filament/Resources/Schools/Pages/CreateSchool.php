@@ -43,7 +43,7 @@ class CreateSchool extends CreateRecord
 
             $divisionSchools->each(function (School $divisionSchool, int $index) use ($schoolAdmin): void {
                 $schoolAdmin->schools()->attach($divisionSchool, [
-                    'role' => 'school_admin',
+                    'role' => User::SCHOOL_ROLE_ADMIN,
                     'is_primary' => $index === 0,
                 ]);
             });

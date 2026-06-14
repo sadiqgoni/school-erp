@@ -15,7 +15,7 @@ class StudentInvoicePdfController extends Controller
 
         abort_unless(
             $user && (
-                $user->is_platform_admin
+                $user->isSuperAdmin()
                 || (
                     $user->schools()->whereKey($invoice->school_id)->exists()
                     && (

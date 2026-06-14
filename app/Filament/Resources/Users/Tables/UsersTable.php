@@ -53,13 +53,14 @@ class UsersTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_platform_admin')
                     ->boolean()
+                    ->label('Superadmin')
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                 IconColumn::make('is_active')
                     ->boolean(),
             ])
             ->filters([
                 TernaryFilter::make('is_platform_admin')
-                    ->label('Platform admin'),
+                    ->label('Superadmin'),
                 TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
@@ -92,15 +93,15 @@ class UsersTable
                     ->icon('heroicon-o-user-circle')
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
                     ->fillForm(fn (User $record): array => [
-                        'role' => $record->roleForSchool(Filament::getTenant()) ?? 'staff',
+                        'role' => $record->roleForSchool(Filament::getTenant()) ?? User::SCHOOL_ROLE_STAFF,
                     ])
                     ->schema([
                         Select::make('role')
                             ->options([
-                                'school_admin' => 'School admin',
-                                'teacher' => 'Teacher',
-                                'staff' => 'Staff',
-                                'parent' => 'Parent',
+                                User::SCHOOL_ROLE_ADMIN => 'Admin',
+                                User::SCHOOL_ROLE_TEACHER => 'Teacher',
+                                User::SCHOOL_ROLE_STAFF => 'Staff',
+                                User::SCHOOL_ROLE_PARENT => 'Parent',
                             ])
                             ->required(),
                     ])
@@ -150,10 +151,11 @@ class UsersTable
     protected static function roleLabel(User $user): string
     {
         return match (self::roleForTenant($user)) {
-            'school_admin' => 'School admin',
-            'teacher' => 'Teacher',
-            'staff' => 'Staff',
-            'parent' => 'Parent',
+            User::SCHOOL_ROLE_ADMIN => 'Admin',
+            User::SCHOOL_ROLE_TEACHER => 'Teacher',
+            User::SCHOOL_ROLE_STAFF => 'Staff',
+            User::SCHOOL_ROLE_PARENT => 'Parent',
+            User::ROLE_SUPERADMIN => 'Superadmin',
             default => 'Not assigned',
         };
     }
@@ -161,10 +163,11 @@ class UsersTable
     protected static function roleColor(User $user): string
     {
         return match (self::roleForTenant($user)) {
-            'school_admin' => 'success',
-            'teacher' => 'info',
-            'parent' => 'warning',
-            'staff' => 'gray',
+            User::SCHOOL_ROLE_ADMIN => 'success',
+            User::SCHOOL_ROLE_TEACHER => 'info',
+            User::SCHOOL_ROLE_PARENT => 'warning',
+            User::SCHOOL_ROLE_STAFF => 'gray',
+            User::ROLE_SUPERADMIN => 'danger',
             default => 'danger',
         };
     }

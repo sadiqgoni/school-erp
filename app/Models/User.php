@@ -19,23 +19,50 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 
-#[Fillable(['name', 'email', 'email_verified_at', 'password', 'is_platform_admin', 'is_active'])]
+#[Fillable(['name', 'email', 'email_verified_at', 'password', 'role', 'is_platform_admin', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
+    public const ROLE_USER = 'user';
+
+    public const ROLE_SUPERADMIN = 'superadmin';
+
+    public const SCHOOL_ROLE_ADMIN = 'admin';
+
+    public const SCHOOL_ROLE_TEACHER = 'teacher';
+
+    public const SCHOOL_ROLE_STAFF = 'staff';
+
+    public const SCHOOL_ROLE_PARENT = 'parent';
+
     protected static function booted(): void
     {
         static::creating(function (self $user): void {
-            if ($user->is_platform_admin) {
+            if ($user->isSuperAdmin()) {
+                $user->role = self::ROLE_SUPERADMIN;
+                $user->is_platform_admin = true;
+
                 return;
             }
 
             if (self::query()->doesntExist()) {
+                $user->role = self::ROLE_SUPERADMIN;
                 $user->is_platform_admin = true;
             }
+        });
+
+        static::saving(function (self $user): void {
+            if ($user->is_platform_admin || $user->role === self::ROLE_SUPERADMIN) {
+                $user->role = self::ROLE_SUPERADMIN;
+                $user->is_platform_admin = true;
+
+                return;
+            }
+
+            $user->role ??= self::ROLE_USER;
         });
     }
 
@@ -78,9 +105,9 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         }
 
         return match ($panel->getId()) {
-            'admin' => $this->is_platform_admin || $this->schools()->exists(),
-            'school' => $this->is_platform_admin
-                ? $this->schoolPanelSchoolsQuery()->exists()
+            'admin' => $this->isSuperAdmin() || $this->schools()->exists(),
+            'school' => $this->isSuperAdmin()
+                ? School::query()->withoutGlobalScopes()->exists()
                 : $this->schools()->exists(),
             default => false,
         };
@@ -89,7 +116,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     public function getTenants(Panel $panel): array|Collection
     {
         if ($panel->getId() !== 'school') {
-            return $this->is_platform_admin
+            return $this->isSuperAdmin()
                 ? School::query()->withoutGlobalScopes()->get()
                 : $this->schools()->withoutGlobalScopes()->get();
         }
@@ -103,8 +130,15 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
-        if ($panel->getId() === 'school' && ! $this->is_platform_admin && $this->isParent()) {
+        if ($panel->getId() === 'school' && ! $this->isSuperAdmin() && $this->isParent()) {
             return $this->parentStudentSchoolsQuery()->first();
+        }
+
+        if ($panel->getId() === 'school' && $this->isSuperAdmin()) {
+            return School::query()
+                ->withoutGlobalScopes()
+                ->orderBy('name')
+                ->first();
         }
 
         return $this->schools()
@@ -116,10 +150,8 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if ($this->is_platform_admin) {
-            return $this->schoolPanelSchoolsQuery()
-                ->whereKey($tenant)
-                ->exists();
+        if ($this->isSuperAdmin()) {
+            return $tenant instanceof School;
         }
 
         if ($this->isParent()) {
@@ -149,7 +181,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             ->whereKey($schoolId)
             ->first();
 
-        return $school?->pivot?->role;
+        return self::normalizeSchoolRole($school?->pivot?->role);
     }
 
     /**
@@ -157,14 +189,33 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
      */
     public function hasSchoolRole(Model|int|null $school, array|string $roles): bool
     {
-        return in_array($this->roleForSchool($school), (array) $roles, true);
+        $roles = array_map(
+            fn (string $role): string => self::normalizeSchoolRole($role),
+            (array) $roles,
+        );
+
+        return in_array($this->roleForSchool($school), $roles, true);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === self::ROLE_SUPERADMIN || (bool) $this->is_platform_admin;
+    }
+
+    public static function normalizeSchoolRole(?string $role): ?string
+    {
+        return match ($role) {
+            'school_admin' => self::SCHOOL_ROLE_ADMIN,
+            'platform_admin' => self::ROLE_SUPERADMIN,
+            default => $role,
+        };
     }
 
     protected function isParent(): bool
     {
         return $this->schools()
             ->withoutGlobalScopes()
-            ->wherePivot('role', 'parent')
+            ->wherePivot('role', self::SCHOOL_ROLE_PARENT)
             ->exists();
     }
 

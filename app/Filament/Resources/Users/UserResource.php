@@ -65,7 +65,7 @@ class UserResource extends Resource
                             ->badge()
                             ->placeholder('No school assigned'),
                         IconEntry::make('is_platform_admin')
-                            ->label('Platform admin')
+                            ->label('Superadmin')
                             ->boolean(),
                         IconEntry::make('is_active')
                             ->label('Active')
@@ -100,11 +100,11 @@ class UserResource extends Resource
         $user = Filament::auth()->user();
 
         if ($panel === 'admin') {
-            return (bool) $user?->is_platform_admin;
+            return (bool) $user?->isSuperAdmin();
         }
 
         if ($panel === 'school') {
-            return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'school_admin');
+            return (bool) $user?->hasSchoolRole(Filament::getTenant(), User::SCHOOL_ROLE_ADMIN);
         }
 
         return false;

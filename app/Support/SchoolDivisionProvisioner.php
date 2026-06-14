@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\School;
+use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -36,7 +37,7 @@ class SchoolDivisionProvisioner
                 $divisionSchools->each(function (School $divisionSchool, int $index) use ($user): void {
                     $user->schools()->syncWithoutDetaching([
                         $divisionSchool->getKey() => [
-                            'role' => $user->pivot->role ?? 'school_admin',
+                            'role' => User::normalizeSchoolRole($user->pivot->role ?? User::SCHOOL_ROLE_ADMIN),
                             'is_primary' => (bool) ($user->pivot->is_primary ?? false) && $index === 0,
                         ],
                     ]);

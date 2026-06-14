@@ -20,7 +20,7 @@ class RedirectSchoolUserFromAdmin
         if (
             $user instanceof User
             && $user->is_active
-            && (! $user->is_platform_admin)
+            && (! $user->isSuperAdmin())
             && $request->is('admin', 'admin/*')
             && ($school = $user->getDefaultTenant(Filament::getCurrentOrDefaultPanel()))
         ) {

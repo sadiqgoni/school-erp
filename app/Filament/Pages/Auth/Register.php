@@ -16,6 +16,7 @@ class Register extends BaseRegister
             ...$data,
             'email_verified_at' => now(),
             'is_active' => true,
+            'role' => 'superadmin',
             'is_platform_admin' => true,
         ];
     }
