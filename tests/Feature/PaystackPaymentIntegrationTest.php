@@ -24,7 +24,7 @@ class PaystackPaymentIntegrationTest extends TestCase
             ->firstOrFail();
 
         Http::fake([
-            'api.paystack.co/transaction/initialize' => Http::response([
+            'https://api.paystack.co/transaction/initialize' => Http::response([
                 'status' => true,
                 'message' => 'Authorization URL created',
                 'data' => [
@@ -43,7 +43,7 @@ class PaystackPaymentIntegrationTest extends TestCase
 
         Http::assertSent(fn ($request): bool => $request->url() === 'https://api.paystack.co/transaction/initialize'
             && $request['amount'] === 2500000
-            && $request['email'] === 'guardian@gmail.com'
+            && $request['email'] === 'guardian@example.com'
             && $request['currency'] === 'NGN');
     }
 
@@ -118,6 +118,56 @@ class PaystackPaymentIntegrationTest extends TestCase
             'event_type' => 'fee_payment_received',
             'channel' => 'sms',
             'recipient_contact' => '+2348011111111',
+        ]);
+    }
+
+    public function test_paystack_callback_redirects_to_receipt_after_successful_payment(): void
+    {
+        $this->seed();
+        config()->set('services.paystack.secret_key', 'sk_test_demo');
+
+        $invoice = StudentInvoice::query()
+            ->where('invoice_number', 'INV-2026-0001')
+            ->firstOrFail();
+
+        $invoice->forceFill([
+            'payment_provider' => 'paystack',
+            'payment_reference' => 'PAYSTACK-CALLBACK-001',
+            'payment_url' => 'https://checkout.paystack.com/demo-callback',
+            'payment_status' => 'initialized',
+        ])->save();
+
+        Http::fake([
+            'api.paystack.co/transaction/verify/PAYSTACK-CALLBACK-001' => Http::response([
+                'status' => true,
+                'message' => 'Verification successful',
+                'data' => [
+                    'id' => 22334455,
+                    'status' => 'success',
+                    'reference' => 'PAYSTACK-CALLBACK-001',
+                    'amount' => 2500000,
+                    'paidAt' => '2026-09-10T10:15:00.000Z',
+                    'customer' => [
+                        'email' => 'guardian@example.com',
+                    ],
+                    'authorization' => [
+                        'channel' => 'card',
+                    ],
+                ],
+            ]),
+        ]);
+
+        $this
+            ->get('/payments/paystack/callback?reference=PAYSTACK-CALLBACK-001')
+            ->assertRedirect(route('payments.receipt', [
+                'reference' => 'PAYSTACK-CALLBACK-001',
+                'status' => 'success',
+            ]));
+
+        $this->assertDatabaseHas(StudentInvoice::class, [
+            'id' => $invoice->getKey(),
+            'status' => 'paid',
+            'payment_status' => 'paid',
         ]);
     }
 }

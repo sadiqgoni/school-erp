@@ -3,6 +3,7 @@
 use App\Http\Controllers\ReportCardPdfController;
 use App\Http\Controllers\PaystackPaymentCallbackController;
 use App\Http\Controllers\PaystackWebhookController;
+use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\SimulatedPaymentCheckoutController;
 use App\Http\Controllers\SimulatedPaymentCompleteController;
 use App\Http\Controllers\StudentInvoicePdfController;
@@ -23,6 +24,9 @@ Route::get('/payments/paystack/callback', PaystackPaymentCallbackController::cla
 
 Route::post('/payments/paystack/webhook', PaystackWebhookController::class)
     ->name('payments.paystack.webhook');
+
+Route::get('/payments/receipt', PaymentReceiptController::class)
+    ->name('payments.receipt');
 
 Route::get('/payments/checkout', [SimulatedPaymentCheckoutController::class, 'show'])
     ->name('payments.checkout');

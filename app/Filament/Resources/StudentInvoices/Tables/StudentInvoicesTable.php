@@ -26,25 +26,46 @@ class StudentInvoicesTable
                     ->searchable()
                     ->sortable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                TextColumn::make('invoice_number')->searchable()->sortable(),
-                TextColumn::make('invoice_type')->label('Type')->badge()->sortable(),
-                TextColumn::make('student.admission_number')->label('Admission no.')->searchable()->sortable(),
-                TextColumn::make('student.full_name')->label('Student')->searchable(),
+                TextColumn::make('invoice_number')
+                    ->label('Invoice')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record): string => 'Issued '.$record->invoice_date?->format('d M Y')),
+                TextColumn::make('student.full_name')
+                    ->label('Student')
+                    ->searchable()
+                    ->description(fn ($record): ?string => $record->student?->admission_number),
                 TextColumn::make('student.enrollments.schoolClass.name')
                     ->label('Class')
                     ->badge()
                     ->separator(',')
                     ->placeholder('No class')
                     ->toggleable(),
-                TextColumn::make('discount')->money('NGN')->sortable()->toggleable(),
-                TextColumn::make('total')->money('NGN')->sortable(),
-                TextColumn::make('amount_paid')->money('NGN')->sortable(),
-                TextColumn::make('balance')->money('NGN')->sortable(),
+                TextColumn::make('due_date')
+                    ->label('Due')
+                    ->date('d M Y')
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('total')
+                    ->money('NGN')
+                    ->sortable()
+                    ->weight('semibold'),
+                TextColumn::make('amount_paid')
+                    ->label('Paid')
+                    ->money('NGN')
+                    ->sortable()
+                    ->color('success'),
+                TextColumn::make('balance')
+                    ->money('NGN')
+                    ->sortable()
+                    ->weight('bold')
+                    ->color(fn ($state): string => ((float) $state) > 0 ? 'warning' : 'success'),
                 TextColumn::make('payment_provider')
                     ->label('Gateway')
                     ->badge()
                     ->placeholder('Manual')
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('payment_status')
                     ->label('Gateway status')
                     ->badge()
@@ -54,8 +75,14 @@ class StudentInvoicesTable
                         'failed' => 'danger',
                         default => 'gray',
                     })
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('invoice_type')
+                    ->label('Type')
+                    ->badge()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
+                    ->label('Invoice status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'paid' => 'success',

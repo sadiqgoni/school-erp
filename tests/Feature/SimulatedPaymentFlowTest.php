@@ -43,7 +43,19 @@ class SimulatedPaymentFlowTest extends TestCase
             'reference' => $invoice->payment_reference,
             'outcome' => 'success',
             'payment_method' => 'card',
-        ])->assertRedirect($invoice->payment_url);
+        ])->assertRedirect(route('payments.receipt', [
+            'reference' => $invoice->payment_reference,
+            'status' => 'success',
+        ]));
+
+        $this
+            ->get(route('payments.receipt', [
+                'reference' => $invoice->payment_reference,
+                'status' => 'success',
+            ]))
+            ->assertOk()
+            ->assertSee('Payment received')
+            ->assertSee('Back to invoices');
 
         $this->assertDatabaseCount(FeePayment::class, 2);
         $this->assertDatabaseHas(FeePayment::class, [
@@ -88,7 +100,10 @@ class SimulatedPaymentFlowTest extends TestCase
             'reference' => $invoice->payment_reference,
             'outcome' => 'failed',
             'payment_method' => 'online_banking',
-        ])->assertRedirect($invoice->payment_url);
+        ])->assertRedirect(route('payments.receipt', [
+            'reference' => $invoice->payment_reference,
+            'status' => 'failed',
+        ]));
 
         $this->assertDatabaseCount(FeePayment::class, 1);
         $this->assertDatabaseHas(StudentInvoice::class, [

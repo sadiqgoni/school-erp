@@ -36,8 +36,10 @@ class SimulatedPaymentCompleteController extends Controller
             ])->save();
 
             return redirect()
-                ->to($invoice->payment_url ?: route('payments.checkout', ['reference' => $invoice->payment_reference]))
-                ->with('status', 'failed');
+                ->route('payments.receipt', [
+                    'reference' => $invoice->payment_reference,
+                    'status' => 'failed',
+                ]);
         }
 
         $guardian = $invoice->student?->guardianLinks
@@ -61,7 +63,9 @@ class SimulatedPaymentCompleteController extends Controller
         ]);
 
         return redirect()
-            ->to($invoice->payment_url ?: route('payments.checkout', ['reference' => $invoice->payment_reference]))
-            ->with('status', $payment ? 'success' : 'unmatched');
+            ->route('payments.receipt', [
+                'reference' => $invoice->payment_reference,
+                'status' => $payment ? 'success' : 'unmatched',
+            ]);
     }
 }

@@ -21,13 +21,25 @@ class PaystackPaymentCallbackController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            return response('Payment verification failed. Please contact the school with reference: '.$reference, 502);
+            return redirect()
+                ->route('payments.receipt', [
+                    'reference' => $reference,
+                    'status' => 'failed',
+                ]);
         }
 
         if (! $payment) {
-            return response('Payment was not successful or could not be matched. Reference: '.$reference, 202);
+            return redirect()
+                ->route('payments.receipt', [
+                    'reference' => $reference,
+                    'status' => 'unmatched',
+                ]);
         }
 
-        return response('Payment received successfully. Receipt: '.$payment->receipt_number);
+        return redirect()
+            ->route('payments.receipt', [
+                'reference' => $reference,
+                'status' => 'success',
+            ]);
     }
 }
