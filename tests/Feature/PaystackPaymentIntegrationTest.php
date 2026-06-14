@@ -43,7 +43,7 @@ class PaystackPaymentIntegrationTest extends TestCase
 
         Http::assertSent(fn ($request): bool => $request->url() === 'https://api.paystack.co/transaction/initialize'
             && $request['amount'] === 2500000
-            && $request['email'] === 'guardian@example.com'
+            && $request['email'] === 'guardian@gmail.com'
             && $request['currency'] === 'NGN');
     }
 
@@ -74,7 +74,7 @@ class PaystackPaymentIntegrationTest extends TestCase
                     'amount' => 2500000,
                     'paidAt' => '2026-09-10T10:15:00.000Z',
                     'customer' => [
-                        'email' => 'guardian@example.com',
+                        'email' => 'guardian@gmail.com',
                     ],
                     'authorization' => [
                         'channel' => 'card',

@@ -499,7 +499,7 @@
                         </label>
                         <label>
                             Account email or phone
-                            <input name="bank_login" placeholder="name@example.com or phone number">
+                            <input name="bank_login" placeholder="name@gmail.com or phone number">
                         </label>
                         <p class="hint">Choose your bank and continue to authorize the payment.</p>
                     </div>

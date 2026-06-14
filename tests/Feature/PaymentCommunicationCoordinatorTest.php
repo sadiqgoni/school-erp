@@ -39,7 +39,7 @@ class PaymentCommunicationCoordinatorTest extends TestCase
             'student_id' => $invoice->student_id,
             'event_type' => 'fee_invoice_created',
             'channel' => 'email',
-            'recipient_contact' => 'guardian@example.com',
+            'recipient_contact' => 'guardian@gmail.com',
             'status' => 'queued',
         ]);
     }
@@ -91,7 +91,7 @@ class PaymentCommunicationCoordinatorTest extends TestCase
             'student_id' => $payment->student_id,
             'event_type' => 'fee_payment_received',
             'channel' => 'email',
-            'recipient_contact' => 'guardian@example.com',
+            'recipient_contact' => 'guardian@gmail.com',
             'status' => 'queued',
         ]);
     }

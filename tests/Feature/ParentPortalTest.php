@@ -17,7 +17,7 @@ class ParentPortalTest extends TestCase
         $this->seed(ParentAccountsSeeder::class);
 
         $parent = User::query()
-            ->where('email', 'guardian@example.com')
+            ->where('email', 'guardian@gmail.com')
             ->firstOrFail();
 
         $this

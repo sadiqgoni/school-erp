@@ -57,7 +57,7 @@ class AdminPanelSmokeTest extends TestCase
     {
         $this->seed();
 
-        $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
+        $admin = User::query()->where('email', 'admin')->firstOrFail();
         $admin->update(['is_active' => false]);
 
         $this
