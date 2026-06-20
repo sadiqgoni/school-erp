@@ -26,6 +26,7 @@ class FeePaymentForm
                     ->schema([
                         SchoolSelect::make(),
                         Select::make('student_invoice_id')
+                            ->label('Invoice')
                             ->relationship('studentInvoice', 'invoice_number')
                             ->searchable()
                             ->preload()
@@ -35,13 +36,17 @@ class FeePaymentForm
                                 $invoice = $state ? StudentInvoice::query()->find($state) : null;
 
                                 $set('student_id', $invoice?->student_id);
+                                $set('amount', $invoice?->balance ? number_format((float) $invoice->balance, 2, '.', '') : null);
+                                $set('income_account_id', $invoice?->income_account_id);
                             }),
                         Select::make('student_id')
+                            ->label('Student')
                             ->relationship('student', 'admission_number')
                             ->searchable()
                             ->preload()
                             ->disabled()
-                            ->dehydrated(false)
+                            ->dehydrated()
+                            ->required()
                             ->placeholder(fn (Get $get): ?string => StudentInvoice::query()->find($get('student_invoice_id'))?->student?->admission_number),
                         TextInput::make('receipt_number')
                             ->maxLength(60)
@@ -50,7 +55,12 @@ class FeePaymentForm
                             ->placeholder('Auto-generated'),
                         TextInput::make('payer')->maxLength(255),
                         DatePicker::make('payment_date')->required()->default(today()),
-                        TextInput::make('amount')->numeric()->prefix('NGN')->required(),
+                        TextInput::make('amount')
+                            ->label('Amount received')
+                            ->numeric()
+                            ->prefix('NGN')
+                            ->required()
+                            ->helperText('Defaults to the invoice balance; adjust only for partial payments.'),
                         Select::make('payment_method')->required()->default('cash')->options([
                             'cash' => 'Cash',
                             'bank_transfer' => 'Bank transfer',
@@ -60,6 +70,7 @@ class FeePaymentForm
                         ]),
                         Select::make('bank_account_id')
                             ->label('Bank account')
+                            ->helperText('Optional, but useful for reconciling bank deposits.')
                             ->options(fn (): array => BankAccount::query()
                                 ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
                                 ->where('is_active', true)
@@ -70,7 +81,8 @@ class FeePaymentForm
                             ->searchable()
                             ->preload(),
                         Select::make('asset_account_id')
-                            ->label('Asset account')
+                            ->label('Debit account')
+                            ->helperText('Usually Cash or Bank. If left blank, the system uses the school default.')
                             ->options(fn (): array => LedgerAccount::query()
                                 ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
                                 ->where('type', 'asset')
@@ -82,7 +94,8 @@ class FeePaymentForm
                             ->searchable()
                             ->preload(),
                         Select::make('income_account_id')
-                            ->label('Income account')
+                            ->label('Credit account')
+                            ->helperText('Usually Tuition or School Fee Income. Inherits the invoice income account when available.')
                             ->options(fn (): array => LedgerAccount::query()
                                 ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
                                 ->where('type', 'income')

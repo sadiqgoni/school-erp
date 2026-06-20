@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\SplitLogin;
+use App\Filament\Pages\Auth\Register;
 use App\Filament\Resources\Schools\SchoolResource;
 use App\Filament\Resources\Users\UserResource;
 use App\Http\Middleware\EnsureActiveUser;
@@ -35,11 +36,15 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('School Dice Admin')
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
             ->brandLogoHeight('75px')
+            ->registration(Register::class)
             ->spa()
             ->colors([
                 'primary' => Color::Teal,
                 'gray' => Color::Slate,
             ])
+            ->globalSearch()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchFieldKeyBindingSuffix()
             ->sidebarWidth('280px')
             ->sidebarCollapsibleOnDesktop()
             ->viteTheme('resources/css/filament/panel-theme.css')

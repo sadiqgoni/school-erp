@@ -25,6 +25,10 @@ class FeeStructuresTable
                 TextColumn::make('schoolClass.name')->label('Class')->sortable(),
                 TextColumn::make('feeType.name')->label('Fee')->searchable()->sortable(),
                 TextColumn::make('amount')->money('NGN')->sortable(),
+                TextColumn::make('due_date')
+                    ->label('Due date')
+                    ->date()
+                    ->sortable(),
                 IconColumn::make('is_active')->boolean(),
             ])
             ->filters([

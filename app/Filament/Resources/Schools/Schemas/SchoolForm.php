@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Schools\Schemas;
 
 use App\Models\School;
+use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
@@ -72,11 +74,30 @@ class SchoolForm
                     CheckboxList::make('sections')
                         ->label('School sections')
                         ->options(School::DIVISIONS)
-                        ->default(array_keys(School::DIVISIONS))
+                        ->default(function (?School $record): array {
+                            if (! $record) {
+                                return array_keys(School::DIVISIONS);
+                            }
+
+                            $rootSchoolId = $record->parent_school_id ?: $record->getKey();
+
+                            $sections = School::query()
+                                ->withoutGlobalScopes()
+                                ->where('parent_school_id', $rootSchoolId)
+                                ->where('is_active', true)
+                                ->pluck('division')
+                                ->filter()
+                                ->values()
+                                ->all();
+
+                            return $sections !== [] ? $sections : array_keys(School::DIVISIONS);
+                        })
                         ->required()
                         ->columns(3)
-                        ->helperText('Choose the section workspaces this school should have in the portal.')
-                        ->visible(fn (string $operation): bool => $operation === 'create')
+                        ->helperText($isTenantProfile
+                            ? 'Choose the active school section workspaces for this school.'
+                            : 'Choose the section workspaces this school should have in the portal.')
+                        ->visible(fn (string $operation): bool => $operation === 'create' || ($isTenantProfile && (bool) Filament::auth()->user()?->isSuperAdmin()))
                         ->columnSpanFull(),
                     Select::make('subscription_plan')
                         ->required()
@@ -139,6 +160,14 @@ class SchoolForm
                         ->required(fn (string $operation): bool => $operation === 'create')
                         ->maxLength(255)
                         ->placeholder('Amina Yusuf'),
+                    Select::make('admin_role')
+                        ->label('Role')
+                        ->options([
+                            User::SCHOOL_ROLE_ADMIN => 'School Admin',
+                        ])
+                        ->default(User::SCHOOL_ROLE_ADMIN)
+                        ->required(fn (string $operation): bool => $operation === 'create')
+                        ->selectablePlaceholder(false),
                     TextInput::make('admin_email')
                         ->label('Email address')
                         ->email()

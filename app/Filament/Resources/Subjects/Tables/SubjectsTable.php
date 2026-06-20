@@ -28,6 +28,7 @@ class SubjectsTable
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('department')
+                ->label('Section')
                     ->searchable()
                     ->toggleable(),
                 IconColumn::make('is_active')

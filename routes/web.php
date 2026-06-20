@@ -4,6 +4,8 @@ use App\Http\Controllers\ReportCardPdfController;
 use App\Http\Controllers\PaystackPaymentCallbackController;
 use App\Http\Controllers\PaystackWebhookController;
 use App\Http\Controllers\PaymentReceiptController;
+use App\Http\Controllers\SalaryMonthReportPdfController;
+use App\Http\Controllers\SalaryPostingPdfController;
 use App\Http\Controllers\SimulatedPaymentCheckoutController;
 use App\Http\Controllers\SimulatedPaymentCompleteController;
 use App\Http\Controllers\StudentInvoicePdfController;
@@ -18,6 +20,12 @@ Route::middleware('auth')->get('/student-invoices/{invoice}/pdf', StudentInvoice
 
 Route::middleware('auth')->get('/report-cards/{reportCard}/pdf', ReportCardPdfController::class)
     ->name('report-cards.pdf');
+
+Route::middleware('auth')->get('/salary-postings/{posting}/pdf', SalaryPostingPdfController::class)
+    ->name('salary-postings.pdf');
+
+Route::middleware('auth')->get('/schools/{school}/salary-postings/pdf', SalaryMonthReportPdfController::class)
+    ->name('salary-postings.month-pdf');
 
 Route::get('/payments/paystack/callback', PaystackPaymentCallbackController::class)
     ->name('payments.paystack.callback');

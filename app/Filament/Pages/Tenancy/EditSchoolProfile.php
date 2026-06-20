@@ -4,7 +4,9 @@ namespace App\Filament\Pages\Tenancy;
 
 use App\Filament\Resources\Schools\Schemas\SchoolForm;
 use App\Models\School;
+use App\Support\SchoolDivisionProvisioner;
 use Filament\Facades\Filament;
+use Filament\Notifications\Notification;
 use Filament\Pages\Tenancy\EditTenantProfile;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +22,10 @@ class EditSchoolProfile extends EditTenantProfile
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user?->is_active && $user->schools()->withoutGlobalScopes()->whereKey($tenant)->exists());
+        return (bool) ($user?->is_active && (
+            $user->isSuperAdmin()
+            || $user->schools()->withoutGlobalScopes()->whereKey($tenant)->exists()
+        ));
     }
 
     public function form(Schema $schema): Schema
@@ -30,16 +35,34 @@ class EditSchoolProfile extends EditTenantProfile
 
     protected function afterSave(): void
     {
-        if (! $this->tenant instanceof School || blank($this->tenant->logo_path)) {
+        if (! $this->tenant instanceof School) {
             return;
         }
 
         $parentSchoolId = $this->tenant->parent_school_id ?: $this->tenant->getKey();
 
-        School::query()
+        $familyQuery = School::query()
             ->withoutGlobalScopes()
             ->whereKey($parentSchoolId)
-            ->orWhere('parent_school_id', $parentSchoolId)
-            ->update(['logo_path' => $this->tenant->logo_path]);
+            ->orWhere('parent_school_id', $parentSchoolId);
+
+        if (filled($this->tenant->logo_path)) {
+            $familyQuery->update(['logo_path' => $this->tenant->logo_path]);
+        }
+
+        $sections = collect(data_get($this->data, 'sections', []))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (Filament::auth()->user()?->isSuperAdmin() && $sections !== []) {
+            SchoolDivisionProvisioner::syncSections($this->tenant, $sections);
+
+            Notification::make()
+                ->success()
+                ->title('School sections updated')
+                ->body('Nursery, primary, and secondary workspaces have been refreshed for this school.')
+                ->send();
+        }
     }
 }

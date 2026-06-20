@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Schools\Pages;
 
 use App\Filament\Resources\Schools\SchoolResource;
+use App\Mail\SchoolAdminWelcomeMail;
 use App\Models\School;
 use App\Models\User;
 use App\Support\SchoolDivisionProvisioner;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class CreateSchool extends CreateRecord
 {
@@ -49,6 +52,7 @@ class CreateSchool extends CreateRecord
             });
 
             $this->schoolAdminCredentials = [
+                'name' => $adminName,
                 'email' => $adminEmail,
                 'password' => $adminPassword,
                 'portal' => url('/portal/'.$divisionSchools->first()->slug),
@@ -60,12 +64,36 @@ class CreateSchool extends CreateRecord
 
     protected function afterCreate(): void
     {
+        $emailSent = $this->sendSchoolAdminWelcomeEmail();
+
         Notification::make()
             ->success()
             ->persistent()
             ->title('School created successfully')
-            ->body("Portal: {$this->schoolAdminCredentials['portal']}\nLogin: {$this->schoolAdminCredentials['email']}\nPassword: {$this->schoolAdminCredentials['password']}")
+            ->body($emailSent
+                ? "The school admin login details have been sent to {$this->schoolAdminCredentials['email']}."
+                : "Portal: {$this->schoolAdminCredentials['portal']}\nLogin: {$this->schoolAdminCredentials['email']}\nPassword: {$this->schoolAdminCredentials['password']}\n\nEmail could not be sent. Check mail settings and resend manually.")
             ->send();
+    }
+
+    protected function sendSchoolAdminWelcomeEmail(): bool
+    {
+        try {
+            Mail::to($this->schoolAdminCredentials['email'])
+                ->send(new SchoolAdminWelcomeMail(
+                    school: $this->record,
+                    adminName: $this->schoolAdminCredentials['name'],
+                    email: $this->schoolAdminCredentials['email'],
+                    temporaryPassword: $this->schoolAdminCredentials['password'],
+                    portalUrl: $this->schoolAdminCredentials['portal'],
+                ));
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 
     protected function getRedirectUrl(): string

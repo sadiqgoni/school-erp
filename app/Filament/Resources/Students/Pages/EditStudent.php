@@ -47,7 +47,7 @@ class EditStudent extends EditRecord
             ->get()
             ->map(fn (Enrollment $enrollment): array => [
                 'academic_year_id' => $enrollment->academic_year_id,
-                'term_id' => $enrollment->term_id,
+                'term_ids' => filled($enrollment->term_id) ? [$enrollment->term_id] : [],
                 'school_class_id' => $enrollment->school_class_id,
                 'class_section_id' => $enrollment->class_section_id,
                 'enrolled_on' => optional($enrollment->enrolled_on)->format('Y-m-d'),
@@ -136,23 +136,33 @@ class EditStudent extends EditRecord
                 continue;
             }
 
-            $enrollment = Enrollment::query()->updateOrCreate(
-                [
-                    'school_id' => $student->school_id,
-                    'student_id' => $student->getKey(),
-                    'academic_year_id' => $enrollmentEntry['academic_year_id'],
-                    'term_id' => $enrollmentEntry['term_id'] ?: null,
-                    'school_class_id' => $enrollmentEntry['school_class_id'],
-                    'class_section_id' => $enrollmentEntry['class_section_id'] ?: null,
-                ],
-                [
-                    'enrolled_on' => $enrollmentEntry['enrolled_on'] ?: null,
-                    'status' => $enrollmentEntry['status'] ?? 'active',
-                    'remarks' => $enrollmentEntry['remarks'] ?: null,
-                ],
-            );
+            $termIds = collect($enrollmentEntry['term_ids'] ?? [null])
+                ->filter(fn ($termId): bool => filled($termId))
+                ->values();
 
-            $existingEnrollmentIds[] = $enrollment->getKey();
+            if ($termIds->isEmpty()) {
+                $termIds = collect([null]);
+            }
+
+            foreach ($termIds as $termId) {
+                $enrollment = Enrollment::query()->updateOrCreate(
+                    [
+                        'school_id' => $student->school_id,
+                        'student_id' => $student->getKey(),
+                        'academic_year_id' => $enrollmentEntry['academic_year_id'],
+                        'term_id' => $termId,
+                    ],
+                    [
+                        'school_class_id' => $enrollmentEntry['school_class_id'],
+                        'class_section_id' => $enrollmentEntry['class_section_id'] ?: null,
+                        'enrolled_on' => $enrollmentEntry['enrolled_on'] ?: null,
+                        'status' => $enrollmentEntry['status'] ?? 'active',
+                        'remarks' => $enrollmentEntry['remarks'] ?: null,
+                    ],
+                );
+
+                $existingEnrollmentIds[] = $enrollment->getKey();
+            }
         }
 
         $student->enrollments()->whereNotIn('id', $existingEnrollmentIds)->delete();

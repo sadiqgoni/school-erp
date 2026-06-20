@@ -22,6 +22,47 @@ class ListSubjects extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('sampleSubjects')
+                ->label('Sample subjects')
+                ->icon('heroicon-o-sparkles')
+                ->color('success')
+                ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                ->requiresConfirmation()
+                ->modalHeading('Create sample subjects')
+                ->modalDescription('This creates a starter Nigerian subject list for the current school section.')
+                ->action(function (): void {
+                    $tenant = Filament::getTenant();
+
+                    if (! $tenant) {
+                        return;
+                    }
+
+                    $subjects = collect(SubjectPreset::defaults(
+                        SubjectPreset::defaultTemplatesForDivision($tenant->division),
+                    ));
+
+                    if ($subjects->isEmpty()) {
+                        $subjects = collect(SubjectPreset::defaults(['nursery', 'primary', 'junior_secondary', 'senior_secondary', 'common']));
+                    }
+
+                    $saved = $subjects->map(fn (array $subject) => Subject::query()->updateOrCreate(
+                        [
+                            'school_id' => $tenant->getKey(),
+                            'code' => $subject['code'],
+                        ],
+                        [
+                            'name' => $subject['name'],
+                            'department' => $subject['department'] ?: null,
+                            'is_active' => true,
+                        ],
+                    ));
+
+                    Notification::make()
+                        ->success()
+                        ->title('Sample subjects ready')
+                        ->body("Saved {$saved->count()} subjects.")
+                        ->send();
+                }),
             Action::make('generateSubjects')
                 ->label('Generate subjects')
                 ->icon('heroicon-o-sparkles')

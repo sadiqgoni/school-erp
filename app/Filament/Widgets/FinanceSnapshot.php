@@ -16,6 +16,15 @@ class FinanceSnapshot extends ChartWidget
 
     protected string $color = 'success';
 
+    protected static ?int $sort = -20;
+
+    public static function canView(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) $user?->hasSchoolRole(Filament::getTenant(), ['admin', 'finance']);
+    }
+
     protected function getData(): array
     {
         $tenant = Filament::getTenant();

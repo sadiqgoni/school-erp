@@ -7,7 +7,7 @@ class SchoolStructurePreset
     public static function defaultTemplatesForDivision(?string $division): array
     {
         return match ($division) {
-            'nursery' => ['nursery', 'kindergarten'],
+            'nursery' => ['nursery'],
             'primary' => ['primary'],
             'secondary' => ['secondary'],
             default => [],
@@ -29,11 +29,14 @@ class SchoolStructurePreset
 
     public static function optionsForDivision(?string $division): array
     {
-        $templates = static::defaultTemplatesForDivision($division);
+        $templates = match ($division) {
+            'nursery' => ['nursery', 'kindergarten', 'grade', 'cambridge'],
+            'primary' => ['primary', 'basic', 'grade', 'cambridge'],
+            'secondary' => ['secondary', 'basic', 'grade', 'cambridge'],
+            default => array_keys(static::options()),
+        };
 
-        return $templates === []
-            ? static::options()
-            : collect(static::options())->only($templates)->all();
+        return collect(static::options())->only($templates)->all();
     }
 
     public static function defaults(array $templates): array

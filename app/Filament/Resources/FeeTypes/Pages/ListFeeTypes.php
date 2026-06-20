@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\FeeTypes\Pages;
 
 use App\Filament\Resources\FeeTypes\FeeTypeResource;
-use App\Models\FeeType;
+use App\Support\FinanceSampleSetup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
@@ -17,11 +17,14 @@ class ListFeeTypes extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('generateCommonFeeTypes')
-                ->label('Generate common fee types')
-                ->icon('heroicon-o-sparkles')
-                ->color('primary')
+            Action::make('sampleFeeTypes')
+                ->label('Sample billing items')
+                ->icon('heroicon-m-sparkles')
+                ->color('success')
                 ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                ->requiresConfirmation()
+                ->modalHeading('Create sample billing items?')
+                ->modalDescription('This will add section-appropriate billing items without deleting existing records.')
                 ->action(function (): void {
                     $tenant = Filament::getTenant();
 
@@ -29,29 +32,12 @@ class ListFeeTypes extends ListRecords
                         return;
                     }
 
-                    $count = 0;
-
-                    foreach ([
-                        ['name' => 'Tuition', 'is_required' => true],
-                        ['name' => 'PTA Levy', 'is_required' => true],
-                        ['name' => 'Development Levy', 'is_required' => true],
-                        ['name' => 'Examination Fee', 'is_required' => true],
-                        ['name' => 'Books', 'is_required' => false],
-                        ['name' => 'Uniform', 'is_required' => false],
-                        ['name' => 'Transport', 'is_required' => false],
-                        ['name' => 'Hostel', 'is_required' => false],
-                    ] as $feeType) {
-                        FeeType::query()->updateOrCreate(
-                            ['school_id' => $tenant->getKey(), 'name' => $feeType['name']],
-                            $feeType + ['description' => null, 'is_active' => true],
-                        );
-                        $count++;
-                    }
+                    $count = FinanceSampleSetup::createFeeTypes($tenant);
 
                     Notification::make()
                         ->success()
-                        ->title('Fee types created')
-                        ->body("Prepared {$count} common fee types for this school.")
+                        ->title('Sample billing items ready')
+                        ->body("{$count} billing items are available for this section.")
                         ->send();
                 }),
             CreateAction::make(),

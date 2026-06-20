@@ -1,6 +1,9 @@
 @php
     $panelId = filament()->getCurrentPanel()?->getId();
     $isAdminPanel = $panelId === 'admin';
+    $canCreateFirstAdmin = $isAdminPanel
+        && filament()->hasRegistration()
+        && ! \App\Models\User::query()->exists();
     $supportText = $isAdminPanel
         ? 'Platform owners can sign in to manage schools, sections, and system users.'
         : 'School owners, staff, and parents can sign in with the account created by the school.';
@@ -114,7 +117,15 @@
                 </div>
 
                 <div class="school-auth-help">
-                    @if ($isAdminPanel)
+                    @if ($canCreateFirstAdmin)
+                        <p>No administrator exists yet.</p>
+                        <a
+                            href="{{ filament()->getRegistrationUrl() }}"
+                            style="display:inline-flex;align-items:center;justify-content:center;margin-top:.75rem;width:100%;border-radius:.65rem;background:#0f766e;padding:.85rem 1rem;color:white;font-weight:800;text-decoration:none;box-shadow:0 12px 24px rgba(15,118,110,.18)"
+                        >
+                            Create first superadmin
+                        </a>
+                    @elseif ($isAdminPanel)
                         <p>Need platform access? Contact the system administrator.</p>
                     @else
                         <p>Need an account? Contact your school administrator.</p>

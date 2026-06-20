@@ -21,6 +21,9 @@ return new class extends Migration
             $table->string('description');
             $table->decimal('amount', 12, 2);
             $table->string('payment_method', 40)->default('cash');
+            $table->foreignId('bank_account_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('asset_account_id')->nullable()->constrained('ledger_accounts')->nullOnDelete();
+            $table->foreignId('expense_account_id')->nullable()->constrained('ledger_accounts')->nullOnDelete();
             $table->string('reference')->nullable();
             $table->foreignId('recorded_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('status', 30)->default('approved');

@@ -63,19 +63,45 @@ class StaffTable
                     ->label('Type')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === Staff::TYPE_TEACHING ? 'Teaching' : 'Non-teaching')
-                    ->color(fn (string $state): string => $state === Staff::TYPE_TEACHING ? 'success' : 'gray'),
+                    ->color(fn (string $state): string => $state === Staff::TYPE_TEACHING ? 'info' : 'gray'),
                 TextColumn::make('department.name')
                     ->label('Unit')
                     ->placeholder('Not set')
                     ->searchable()
                     ->sortable()
                     ->description(fn (Staff $record): ?string => $record->job_title),
+                TextColumn::make('primaryRoleAssignment.staffRole.name')
+                    ->label('Role')
+                    ->placeholder('Not assigned')
+                    ->badge()
+                    ->color('primary')
+                    ->toggleable(),
+                TextColumn::make('staffBank.name')
+                    ->label('Bank')
+                    ->placeholder('Not set')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('salaryTemplate.code')
+                    ->label('Salary scale')
+                    ->placeholder('Not set')
+                    ->badge()
+                    ->color('primary')
+                    ->description(fn (Staff $record): string => collect([$record->salary_grade_level, $record->salary_step ? "Step {$record->salary_step}" : null])->filter()->implode('  ·  '))
+                    ->toggleable(),
                 TextColumn::make('highest_qualification')
                     ->label('Qualification')
                     ->formatStateUsing(fn (?string $state): ?string => $state ? (Staff::QUALIFICATION_OPTIONS[$state] ?? $state) : null)
                     ->placeholder('Not set')
                     ->toggleable(),
-                TextColumn::make('employment_type')->badge(),
+                TextColumn::make('employment_type')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()->toString())
+                    ->color(fn (string $state): string => match ($state) {
+                        'full_time' => 'success',
+                        'part_time' => 'info',
+                        'contract' => 'warning',
+                        'temporary' => 'gray',
+                        default => 'gray',
+                    }),
                 TextColumn::make('user.email')
                     ->label('Portal Login')
                     ->placeholder('No login')
@@ -325,6 +351,17 @@ class StaffTable
                             ->revealable()
                             ->required()
                             ->minLength(8),
+                        Select::make('school_role')
+                            ->label('Portal role')
+                            ->options([
+                                User::SCHOOL_ROLE_FINANCE => 'Finance',
+                                User::SCHOOL_ROLE_STAFF => 'Staff',
+                                User::SCHOOL_ROLE_TEACHER => 'Teacher',
+                            ])
+                            ->default(fn (Staff $record): string => $record->staff_type === Staff::TYPE_TEACHING
+                                ? User::SCHOOL_ROLE_TEACHER
+                                : User::SCHOOL_ROLE_FINANCE)
+                            ->required(),
                     ])
                     ->action(function (Staff $record, array $data): void {
                         DB::transaction(function () use ($record, $data): void {
@@ -340,7 +377,11 @@ class StaffTable
 
                             $user->schools()->syncWithoutDetaching([
                                 $record->school_id => [
-                                    'role' => $record->staff_type === Staff::TYPE_TEACHING ? 'teacher' : 'staff',
+                                    'role' => $data['school_role'] ?? (
+                                        $record->staff_type === Staff::TYPE_TEACHING
+                                            ? User::SCHOOL_ROLE_TEACHER
+                                            : User::SCHOOL_ROLE_STAFF
+                                    ),
                                     'is_primary' => false,
                                 ],
                             ]);
@@ -364,7 +405,9 @@ class StaffTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('last_name')
+            ->striped();
     }
 
     protected static function hasFormTeacherAssignment(Staff $staff): bool

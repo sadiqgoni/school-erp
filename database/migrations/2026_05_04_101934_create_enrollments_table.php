@@ -24,7 +24,7 @@ return new class extends Migration
             $table->text('remarks')->nullable();
             $table->timestamps();
 
-            $table->unique(['student_id', 'academic_year_id']);
+            $table->unique(['student_id', 'academic_year_id', 'term_id'], 'enrollment_student_year_term_unique');
             $table->index(['school_id', 'academic_year_id', 'school_class_id'], 'enroll_school_year_class_idx');
             $table->index(['school_id', 'status']);
         });

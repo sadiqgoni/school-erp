@@ -7,6 +7,8 @@ use App\Models\ClassSection;
 use App\Models\SchoolClass;
 use App\Models\Staff;
 use App\Models\TeachingAssignment;
+use App\Models\Term;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -42,10 +44,18 @@ class TeachingAssignmentForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Select::make('term_id')
-                            ->relationship('term', 'name')
+                        Select::make('term_ids')
+                            ->label('Terms')
+                            ->options(fn (): array => Term::query()
+                                ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
+                                ->orderBy('position')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->multiple()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->dehydrated(false)
+                            ->helperText('Select one term, multiple terms, or leave empty for the whole session.'),
                         Select::make('school_class_id')
                             ->relationship('schoolClass', 'name')
                             ->searchable()

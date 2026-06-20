@@ -49,6 +49,41 @@ class PaystackPaymentIntegrationTest extends TestCase
             && str_contains((string) $request['callback_url'], 'reference='));
     }
 
+    public function test_parent_invoice_payment_link_uses_configured_paystack_provider(): void
+    {
+        $this->seed();
+        config()->set('services.payments.default', 'paystack');
+        config()->set('services.paystack.secret_key', 'sk_test_demo');
+
+        $invoice = StudentInvoice::query()
+            ->where('invoice_number', 'INV-2026-0001')
+            ->firstOrFail();
+
+        Http::fake([
+            'https://api.paystack.co/transaction/initialize' => Http::response([
+                'status' => true,
+                'message' => 'Authorization URL created',
+                'data' => [
+                    'authorization_url' => 'https://checkout.paystack.com/parent-demo',
+                    'access_code' => 'access-parent-demo',
+                    'reference' => 'SCH-1-INV-1-PARENT',
+                ],
+            ]),
+        ]);
+
+        $method = new \ReflectionMethod(\App\Filament\Resources\ParentInvoices\Tables\ParentInvoicesTable::class, 'paymentUrl');
+        $url = $method->invoke(null, $invoice);
+
+        $this->assertSame('https://checkout.paystack.com/parent-demo', $url);
+        $this->assertDatabaseHas(StudentInvoice::class, [
+            'id' => $invoice->getKey(),
+            'payment_provider' => 'paystack',
+            'payment_reference' => 'SCH-1-INV-1-PARENT',
+            'payment_url' => 'https://checkout.paystack.com/parent-demo',
+            'payment_status' => 'initialized',
+        ]);
+    }
+
     public function test_paystack_webhook_settles_successful_payment_once(): void
     {
         $this->seed();

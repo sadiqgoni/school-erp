@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('fee_types', function (Blueprint $table) {
             $table->id();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('billing_category_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('code', 40);
             $table->text('description')->nullable();

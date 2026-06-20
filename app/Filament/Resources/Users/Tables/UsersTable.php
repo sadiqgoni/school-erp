@@ -12,7 +12,6 @@ use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -26,7 +25,7 @@ class UsersTable
         return $table
             ->modifyQueryUsing(fn (Builder $query): Builder => Filament::getCurrentPanel()?->getId() === 'school'
                 ? self::schoolPanelUsersQuery($query)
-                : $query)
+                : $query->with('schools'))
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
@@ -37,9 +36,10 @@ class UsersTable
                     ->label('Role')
                     ->state(fn (User $record): string => self::roleLabel($record))
                     ->badge()
-                    ->color(fn (User $record): string => self::roleColor($record))
-                    ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school'),
-                TextColumn::make('schools.name')
+                    ->color(fn (User $record): string => self::roleColor($record)),
+                TextColumn::make('school_names')
+                    ->label('School')
+                    ->state(fn (User $record): string => self::schoolNames($record))
                     ->badge()
                     ->toggleable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
@@ -51,16 +51,13 @@ class UsersTable
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                IconColumn::make('is_platform_admin')
-                    ->boolean()
-                    ->label('Superadmin')
-                    ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                IconColumn::make('is_active')
-                    ->boolean(),
+                TextColumn::make('is_active')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
+                    ->color(fn (bool $state): string => $state ? 'success' : 'gray'),
             ])
             ->filters([
-                TernaryFilter::make('is_platform_admin')
-                    ->label('Superadmin'),
                 TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
@@ -99,6 +96,7 @@ class UsersTable
                         Select::make('role')
                             ->options([
                                 User::SCHOOL_ROLE_ADMIN => 'Admin',
+                                User::SCHOOL_ROLE_FINANCE => 'Finance',
                                 User::SCHOOL_ROLE_TEACHER => 'Teacher',
                                 User::SCHOOL_ROLE_STAFF => 'Staff',
                                 User::SCHOOL_ROLE_PARENT => 'Parent',
@@ -150,8 +148,13 @@ class UsersTable
 
     protected static function roleLabel(User $user): string
     {
+        if (Filament::getCurrentPanel()?->getId() === 'admin' && $user->isSuperAdmin()) {
+            return 'Superadmin';
+        }
+
         return match (self::roleForTenant($user)) {
             User::SCHOOL_ROLE_ADMIN => 'Admin',
+            User::SCHOOL_ROLE_FINANCE => 'Finance',
             User::SCHOOL_ROLE_TEACHER => 'Teacher',
             User::SCHOOL_ROLE_STAFF => 'Staff',
             User::SCHOOL_ROLE_PARENT => 'Parent',
@@ -162,8 +165,13 @@ class UsersTable
 
     protected static function roleColor(User $user): string
     {
+        if (Filament::getCurrentPanel()?->getId() === 'admin' && $user->isSuperAdmin()) {
+            return 'danger';
+        }
+
         return match (self::roleForTenant($user)) {
             User::SCHOOL_ROLE_ADMIN => 'success',
+            User::SCHOOL_ROLE_FINANCE => 'primary',
             User::SCHOOL_ROLE_TEACHER => 'info',
             User::SCHOOL_ROLE_PARENT => 'warning',
             User::SCHOOL_ROLE_STAFF => 'gray',
@@ -175,6 +183,13 @@ class UsersTable
     protected static function roleForTenant(User $user): ?string
     {
         $tenant = Filament::getTenant();
+
+        if (Filament::getCurrentPanel()?->getId() === 'admin') {
+            return User::normalizeSchoolRole(
+                $user->schools->pluck('pivot.role')->filter()->first()
+            );
+        }
+
         $role = $user->roleForSchool($tenant);
 
         if ($role) {
@@ -187,5 +202,14 @@ class UsersTable
             ->exists()
                 ? 'parent'
                 : null;
+    }
+
+    protected static function schoolNames(User $user): string
+    {
+        return $user->schools
+            ->map(fn ($school): string => $school->baseSchoolName())
+            ->unique()
+            ->values()
+            ->implode(', ') ?: 'Not assigned';
     }
 }

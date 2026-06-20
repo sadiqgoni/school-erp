@@ -23,6 +23,49 @@ class ListSchoolClasses extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('sampleClasses')
+                ->label('Sample classes')
+                ->icon('heroicon-o-sparkles')
+                ->color('success')
+                ->button()
+                ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                ->requiresConfirmation()
+                ->modalHeading('Create sample classes')
+                ->modalDescription('This creates the common Nigerian class levels for the current school section.')
+                ->action(function (): void {
+                    $tenant = Filament::getTenant();
+
+                    if (! $tenant) {
+                        return;
+                    }
+
+                    $classes = collect(SchoolStructurePreset::defaults(
+                        SchoolStructurePreset::defaultTemplatesForDivision($tenant->division),
+                    ));
+
+                    if ($classes->isEmpty()) {
+                        $classes = collect(SchoolStructurePreset::defaults(['nursery', 'primary', 'secondary']));
+                    }
+
+                    $saved = $classes->map(fn (array $class) => SchoolClass::query()->updateOrCreate(
+                        [
+                            'school_id' => $tenant->getKey(),
+                            'code' => $class['code'],
+                        ],
+                        [
+                            'name' => $class['name'],
+                            'level' => $class['level'],
+                            'department' => $class['department'] ?: null,
+                            'is_active' => true,
+                        ],
+                    ));
+
+                    Notification::make()
+                        ->success()
+                        ->title('Sample classes ready')
+                        ->body("Saved {$saved->count()} class levels.")
+                        ->send();
+                }),
             Action::make('generateStructure')
                 ->label('Generate structure')
                 ->icon('heroicon-o-sparkles')
@@ -41,7 +84,7 @@ class ListSchoolClasses extends ListRecords
                         ->afterStateUpdated(function (?array $state, Set $set): void {
                             $set('classes', SchoolStructurePreset::defaults($state ?? []));
                         })
-                        ->helperText('Only structures for the selected school section are shown.'),
+                        ->helperText('Use Nigerian levels by default, or choose Grade/Cambridge if the school uses that structure.'),
                     Repeater::make('classes')
                         ->label('Class setup')
                         ->default(fn (): array => SchoolStructurePreset::defaults(

@@ -20,12 +20,35 @@ class ExpensesTable
                     ->searchable()
                     ->sortable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                TextColumn::make('expense_number')->searchable()->sortable(),
+                TextColumn::make('expense_number')
+                    ->label('Expense no.')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record): ?string => $record->expense_date?->format('d M Y')),
                 TextColumn::make('expense_date')->date()->sortable(),
-                TextColumn::make('expenseCategory.name')->label('Category')->searchable()->sortable(),
+                TextColumn::make('expenseCategory.name')
+                    ->label('Category')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('info'),
                 TextColumn::make('description')->searchable(),
-                TextColumn::make('amount')->money('NGN')->sortable(),
-                TextColumn::make('payment_method')->badge(),
+                TextColumn::make('amount')
+                    ->money('NGN')
+                    ->sortable()
+                    ->weight('bold')
+                    ->color('danger'),
+                TextColumn::make('payment_method')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()->toString())
+                    ->color(fn (string $state): string => match ($state) {
+                        'cash' => 'gray',
+                        'bank_transfer' => 'info',
+                        'pos', 'card' => 'primary',
+                        'online' => 'success',
+                        default => 'gray',
+                    }),
                 TextColumn::make('bankAccount.bank_name')->label('Bank')->toggleable(),
                 TextColumn::make('assetAccount.name')->label('Paid from')->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('expenseAccount.name')->label('Expense account')->toggleable(isToggledHiddenByDefault: true),
@@ -57,6 +80,8 @@ class ExpensesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('expense_date', 'desc')
+            ->striped();
     }
 }

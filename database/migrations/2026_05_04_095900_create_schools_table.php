@@ -13,6 +13,13 @@ return new class extends Migration
     {
         Schema::create('schools', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('parent_school_id')
+                ->nullable()
+                ->constrained('schools')
+                ->nullOnDelete();
+            $table->string('division', 30)
+                ->nullable()
+                ->index();
             $table->string('name');
             $table->string('code', 30)->unique();
             $table->string('slug')->unique();

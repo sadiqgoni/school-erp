@@ -173,16 +173,18 @@ class StudentForm
                                         ->preload()
                                         ->required()
                                         ->live(),
-                                    Select::make('term_id')
-                                        ->label('Term')
+                                    Select::make('term_ids')
+                                        ->label('Terms')
                                         ->options(fn (Get $get): array => Term::query()
                                             ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
                                             ->when($get('academic_year_id'), fn ($query, $yearId) => $query->where('academic_year_id', $yearId))
                                             ->orderBy('position')
                                             ->pluck('name', 'id')
                                             ->all())
+                                        ->multiple()
                                         ->searchable()
-                                        ->preload(),
+                                        ->preload()
+                                        ->helperText('Select one term, multiple terms, or leave empty for a full-session placement.'),
                                     Select::make('school_class_id')
                                         ->label('Class')
                                         ->options(fn (): array => SchoolClass::query()

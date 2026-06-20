@@ -7,10 +7,13 @@ use App\Filament\Resources\StudentInvoices\StudentInvoiceResource;
 use App\Models\AcademicYear;
 use App\Models\Enrollment;
 use App\Models\FeeStructure;
+use App\Models\LedgerAccount;
 use App\Models\SchoolClass;
+use App\Models\StudentDiscount;
 use App\Models\StudentInvoice;
 use App\Models\StudentInvoiceItem;
 use App\Models\Term;
+use App\Support\FinanceSampleSetup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
@@ -27,6 +30,147 @@ class ListStudentInvoices extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('sampleInvoices')
+                ->label('Sample invoices')
+                ->icon('heroicon-m-sparkles')
+                ->color('success')
+                ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                ->requiresConfirmation()
+                ->modalHeading('Create sample student invoices?')
+                ->modalDescription('This uses current students, class placements, fee structures, discount definitions, and the school fee income account.')
+                ->action(function (): void {
+                    $tenant = Filament::getTenant();
+
+                    if (! $tenant) {
+                        return;
+                    }
+
+                    FinanceSampleSetup::createLedgerAccounts($tenant);
+                    FinanceSampleSetup::createFeeStructures($tenant);
+                    FinanceSampleSetup::createStudentDiscounts($tenant);
+
+                    $academicYear = AcademicYear::query()
+                        ->where('school_id', $tenant->getKey())
+                        ->where('is_current', true)
+                        ->first()
+                        ?? AcademicYear::query()
+                            ->where('school_id', $tenant->getKey())
+                            ->latest('starts_on')
+                            ->first();
+                    $term = $academicYear
+                        ? Term::query()
+                            ->where('school_id', $tenant->getKey())
+                            ->where('academic_year_id', $academicYear->getKey())
+                            ->where('is_current', true)
+                            ->first()
+                        : null;
+
+                    if (! $academicYear || ! $term) {
+                        Notification::make()
+                            ->warning()
+                            ->title('Create a session first')
+                            ->body('Create the sample session and terms before generating invoices.')
+                            ->send();
+
+                        return;
+                    }
+
+                    $incomeAccountId = LedgerAccount::query()
+                        ->where('school_id', $tenant->getKey())
+                        ->where('code', '4010')
+                        ->value('id');
+                    $discounts = StudentDiscount::query()
+                        ->where('school_id', $tenant->getKey())
+                        ->where('is_active', true)
+                        ->orderByRaw("case when type = 'percentage' then 0 else 1 end")
+                        ->orderBy('id')
+                        ->get();
+                    $enrollments = Enrollment::query()
+                        ->where('school_id', $tenant->getKey())
+                        ->where('academic_year_id', $academicYear->getKey())
+                        ->where('status', 'active')
+                        ->with('student')
+                        ->orderBy('student_id')
+                        ->get()
+                        ->unique('student_id')
+                        ->values();
+
+                    if ($enrollments->isEmpty()) {
+                        Notification::make()
+                            ->warning()
+                            ->title('No active students found')
+                            ->body('Create or generate students with class placements first.')
+                            ->send();
+
+                        return;
+                    }
+
+                    $created = 0;
+
+                    DB::transaction(function () use ($tenant, $academicYear, $term, $incomeAccountId, $discounts, $enrollments, &$created): void {
+                        foreach ($enrollments as $index => $enrollment) {
+                            $structures = FeeStructure::query()
+                                ->where('school_id', $tenant->getKey())
+                                ->where('academic_year_id', $academicYear->getKey())
+                                ->where('term_id', $term->getKey())
+                                ->where('school_class_id', $enrollment->school_class_id)
+                                ->with('feeType')
+                                ->get();
+
+                            if ($structures->isEmpty()) {
+                                continue;
+                            }
+
+                            $discount = $discounts->isNotEmpty() && $index % 4 === 0 ? $discounts->first() : null;
+                            $subtotal = (float) $structures->sum('amount');
+                            $discountAmount = $discount?->calculateFor($subtotal) ?? 0;
+
+                            $invoice = StudentInvoice::query()->updateOrCreate(
+                                [
+                                    'school_id' => $tenant->getKey(),
+                                    'student_id' => $enrollment->student_id,
+                                    'academic_year_id' => $academicYear->getKey(),
+                                    'term_id' => $term->getKey(),
+                                    'invoice_type' => 'standard',
+                                ],
+                                [
+                                    'student_discount_id' => $discount?->getKey(),
+                                    'income_account_id' => $incomeAccountId,
+                                    'invoice_date' => today(),
+                                    'due_date' => $term->starts_on?->copy()->addWeeks(3)->toDateString(),
+                                    'discount' => $discountAmount,
+                                    'status' => 'unpaid',
+                                    'notes' => 'Sample invoice generated from fee structures.',
+                                    'subtotal' => 0,
+                                    'total' => 0,
+                                    'amount_paid' => 0,
+                                    'balance' => 0,
+                                ],
+                            );
+
+                            $invoice->items()->delete();
+
+                            foreach ($structures as $structure) {
+                                StudentInvoiceItem::query()->create([
+                                    'school_id' => $tenant->getKey(),
+                                    'student_invoice_id' => $invoice->getKey(),
+                                    'fee_type_id' => $structure->fee_type_id,
+                                    'description' => $structure->feeType?->name ?? 'Charge',
+                                    'amount' => $structure->amount,
+                                ]);
+                            }
+
+                            $invoice->refreshAmounts();
+                            $created++;
+                        }
+                    });
+
+                    Notification::make()
+                        ->success()
+                        ->title('Sample invoices ready')
+                        ->body("Generated or refreshed {$created} invoice(s) for {$academicYear->name} {$term->name}.")
+                        ->send();
+                }),
             Action::make('generateClassInvoices')
                 ->label('Generate class invoices')
                 ->icon('heroicon-o-document-duplicate')

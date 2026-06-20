@@ -8,7 +8,6 @@ use Filament\Actions\EditAction;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
@@ -22,25 +21,22 @@ class StudentDiscountsTable
                     ->searchable()
                     ->sortable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('student.admission_number')->label('Student')->searchable(),
-                TextColumn::make('schoolClass.name')->label('Class')->sortable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record): ?string => $record->notes),
                 TextColumn::make('type')->badge(),
-                TextColumn::make('value')->money('NGN')->sortable(),
-                TextColumn::make('academicYear.name')->label('Year')->sortable(),
-                TextColumn::make('term.name')->sortable(),
+                TextColumn::make('value')
+                    ->sortable()
+                    ->formatStateUsing(fn ($state, $record): string => $record->type === 'percentage'
+                        ? number_format((float) $state, 2).'%'
+                        : 'NGN '.number_format((float) $state, 2)),
+                TextColumn::make('starts_on')->date()->toggleable(),
+                TextColumn::make('ends_on')->date()->toggleable(),
                 IconColumn::make('is_active')->boolean(),
             ])
             ->filters([
-                SelectFilter::make('type')->options([
-                    'fixed' => 'Fixed amount',
-                    'percentage' => 'Percentage',
-                ]),
-                SelectFilter::make('school_class_id')
-                    ->label('Class')
-                    ->relationship('schoolClass', 'name')
-                    ->searchable()
-                    ->preload(),
                 TernaryFilter::make('is_active'),
             ])
             ->recordActions([

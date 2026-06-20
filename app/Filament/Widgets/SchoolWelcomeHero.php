@@ -27,7 +27,7 @@ class SchoolWelcomeHero extends Widget
     {
         $user = Filament::auth()->user();
 
-        return ! $user?->hasSchoolRole(Filament::getTenant(), ['teacher', 'parent']);
+        return ! $user?->hasSchoolRole(Filament::getTenant(), ['teacher', 'finance', 'parent']);
     }
 
     protected function getViewData(): array

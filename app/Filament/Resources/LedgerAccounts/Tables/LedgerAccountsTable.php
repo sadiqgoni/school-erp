@@ -22,9 +22,27 @@ class LedgerAccountsTable
                     ->searchable()
                     ->sortable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                TextColumn::make('code')->badge()->searchable()->sortable(),
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('type')->badge()->sortable(),
+                TextColumn::make('code')
+                    ->badge()
+                    ->color('gray')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record): ?string => $record->description),
+                TextColumn::make('type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'asset' => 'info',
+                        'income' => 'success',
+                        'expense' => 'danger',
+                        'liability' => 'warning',
+                        'equity' => 'primary',
+                        default => 'gray',
+                    })
+                    ->sortable(),
                 TextColumn::make('parent.name')->label('Parent')->toggleable(),
                 TextColumn::make('opening_balance')->money('NGN')->sortable(),
                 TextColumn::make('balance')->money('NGN'),
@@ -47,6 +65,8 @@ class LedgerAccountsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('code')
+            ->striped();
     }
 }

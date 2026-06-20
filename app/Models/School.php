@@ -221,6 +221,26 @@ class School extends Model implements HasAvatar, HasName
         return self::DIVISIONS[$this->division] ?? null;
     }
 
+    public function portalSchool(): self
+    {
+        if ($this->division) {
+            return $this;
+        }
+
+        return self::query()
+            ->withoutGlobalScopes()
+            ->where('parent_school_id', $this->getKey())
+            ->where('is_active', true)
+            ->orderByRaw("FIELD(division, 'nursery', 'primary', 'secondary')")
+            ->orderBy('id')
+            ->first() ?? $this;
+    }
+
+    public function portalUrl(): string
+    {
+        return url('/portal/' . $this->portalSchool()->slug);
+    }
+
     protected function slug(): Attribute
     {
         return Attribute::make(

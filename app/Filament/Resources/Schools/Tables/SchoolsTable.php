@@ -47,7 +47,7 @@ class SchoolsTable
                     ->sortable(),
                 TextColumn::make('slug')
                     ->label('Portal URL')
-                    ->state(fn ($record): string => "/portal/{$record->slug}")
+                    ->state(fn (School $record): string => '/portal/' . $record->portalSchool()->slug)
                     ->copyable()
                     ->copyMessage('Portal URL copied')
                     ->toggleable(),
@@ -92,7 +92,7 @@ class SchoolsTable
                 Action::make('openPortal')
                     ->label('Open portal')
                     ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->url(fn ($record): string => url("/portal/{$record->slug}"))
+                    ->url(fn (School $record): string => $record->portalUrl())
                     ->openUrlInNewTab(),
                 ViewAction::make(),
                 EditAction::make(),

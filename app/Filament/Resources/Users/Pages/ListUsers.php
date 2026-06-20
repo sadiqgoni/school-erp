@@ -47,16 +47,42 @@ class ListUsers extends ListRecords
         ];
 
         School::query()
-            ->withCount('users')
+            ->withoutGlobalScopes()
+            ->whereNull('parent_school_id')
+            ->with('divisions')
             ->orderBy('name')
             ->get()
             ->each(function (School $school) use (&$tabs): void {
-                $tabs['school_'.$school->getKey()] = Tab::make($school->name)
-                    ->badge($school->users_count)
+                $schoolIds = collect([$school->getKey()])
+                    ->merge($school->divisions->pluck('id'))
+                    ->values()
+                    ->all();
+
+                $tabs['school_'.$school->getKey()] = Tab::make($school->name . ' · All Sections')
+                    ->badge(User::query()
+                        ->whereHas('schools', fn (Builder $query): Builder => $query->whereIn('schools.id', $schoolIds))
+                        ->count())
                     ->query(fn (Builder $query): Builder => $query->whereHas(
                         'schools',
-                        fn (Builder $query): Builder => $query->whereKey($school->getKey()),
+                        fn (Builder $query): Builder => $query->whereIn('schools.id', $schoolIds),
                     ));
+
+                $school->divisions
+                    ->sortBy('division')
+                    ->each(function (School $divisionSchool) use (&$tabs, $school): void {
+                        $label = School::DIVISIONS[$divisionSchool->division] ?? ucfirst((string) $divisionSchool->division);
+
+                        $tabs['school_'.$school->getKey().'_'.$divisionSchool->division] = Tab::make($school->name . ' · ' . $label)
+                            ->badge(
+                                User::query()
+                                    ->whereHas('schools', fn (Builder $query): Builder => $query->whereKey($divisionSchool->getKey()))
+                                    ->count()
+                            )
+                            ->query(fn (Builder $query): Builder => $query->whereHas(
+                                'schools',
+                                fn (Builder $query): Builder => $query->whereKey($divisionSchool->getKey()),
+                            ));
+                    });
             });
 
         return $tabs;

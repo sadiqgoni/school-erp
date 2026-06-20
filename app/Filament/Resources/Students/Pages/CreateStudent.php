@@ -98,21 +98,31 @@ class CreateStudent extends CreateRecord
                 continue;
             }
 
-            Enrollment::query()->updateOrCreate(
-                [
-                    'school_id' => $tenant?->getKey(),
-                    'student_id' => $student->getKey(),
-                    'academic_year_id' => $enrollmentEntry['academic_year_id'],
-                    'term_id' => $enrollmentEntry['term_id'] ?: null,
-                    'school_class_id' => $enrollmentEntry['school_class_id'],
-                    'class_section_id' => $enrollmentEntry['class_section_id'] ?: null,
-                ],
-                [
-                    'enrolled_on' => $enrollmentEntry['enrolled_on'] ?: null,
-                    'status' => $enrollmentEntry['status'] ?? 'active',
-                    'remarks' => $enrollmentEntry['remarks'] ?: null,
-                ],
-            );
+            $termIds = collect($enrollmentEntry['term_ids'] ?? [null])
+                ->filter(fn ($termId): bool => filled($termId))
+                ->values();
+
+            if ($termIds->isEmpty()) {
+                $termIds = collect([null]);
+            }
+
+            foreach ($termIds as $termId) {
+                Enrollment::query()->updateOrCreate(
+                    [
+                        'school_id' => $tenant?->getKey(),
+                        'student_id' => $student->getKey(),
+                        'academic_year_id' => $enrollmentEntry['academic_year_id'],
+                        'term_id' => $termId,
+                    ],
+                    [
+                        'school_class_id' => $enrollmentEntry['school_class_id'],
+                        'class_section_id' => $enrollmentEntry['class_section_id'] ?: null,
+                        'enrolled_on' => $enrollmentEntry['enrolled_on'] ?: null,
+                        'status' => $enrollmentEntry['status'] ?? 'active',
+                        'remarks' => $enrollmentEntry['remarks'] ?: null,
+                    ],
+                );
+            }
         }
     }
 }

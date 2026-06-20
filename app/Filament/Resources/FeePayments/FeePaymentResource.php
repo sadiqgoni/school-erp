@@ -10,6 +10,7 @@ use App\Filament\Resources\FeePayments\Schemas\FeePaymentForm;
 use App\Filament\Resources\FeePayments\Tables\FeePaymentsTable;
 use App\Models\FeePayment;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -37,6 +38,33 @@ class FeePaymentResource extends Resource
     public static function table(Table $table): Table
     {
         return FeePaymentsTable::configure($table);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $tenant = Filament::getTenant();
+
+        if (! $tenant) {
+            return null;
+        }
+
+        $count = FeePayment::query()
+            ->where('school_id', $tenant->getKey())
+            ->where('status', 'confirmed')
+            ->whereNull('acknowledged_at')
+            ->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'danger';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'New confirmed payments awaiting acknowledgement';
     }
 
     public static function getRelations(): array

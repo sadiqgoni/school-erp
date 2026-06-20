@@ -36,6 +36,8 @@ class SchoolResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    protected static ?string $recordTitleAttribute = 'name';
+
     protected static bool $isScopedToTenant = false;
 
     public static function form(Schema $schema): Schema
@@ -46,6 +48,20 @@ class SchoolResource extends Resource
     public static function table(Table $table): Table
     {
         return SchoolsTable::configure($table);
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'code', 'slug', 'email', 'phone'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return array_filter([
+            'Code' => $record->code,
+            'Portal' => $record->slug,
+            'Email' => $record->email,
+        ]);
     }
 
     public static function infolist(Schema $schema): Schema

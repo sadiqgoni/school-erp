@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable([
     'school_id',
@@ -34,6 +35,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'trcn_number',
     'hire_date',
     'basic_salary',
+    'salary_template_id',
+    'salary_grade_level',
+    'salary_step',
+    'payroll_sheet_id',
+    'staff_bank_id',
     'bank_name',
     'bank_account_name',
     'bank_account_number',
@@ -94,9 +100,41 @@ class Staff extends Model
         return $this->belongsTo(Department::class);
     }
 
+    public function staffBank(): BelongsTo
+    {
+        return $this->belongsTo(StaffBank::class);
+    }
+
+    public function salaryTemplate(): BelongsTo
+    {
+        return $this->belongsTo(SalaryTemplate::class);
+    }
+
+    public function payrollSheet(): BelongsTo
+    {
+        return $this->belongsTo(PayrollSheet::class);
+    }
+
+    public function salaryPostings(): HasMany
+    {
+        return $this->hasMany(SalaryPosting::class);
+    }
+
+    public function salaryAdjustments(): HasMany
+    {
+        return $this->hasMany(StaffSalaryAdjustment::class);
+    }
+
     public function roleAssignments(): HasMany
     {
         return $this->hasMany(StaffRoleAssignment::class);
+    }
+
+    public function primaryRoleAssignment(): HasOne
+    {
+        return $this->hasOne(StaffRoleAssignment::class)
+            ->where('is_primary', true)
+            ->where('is_active', true);
     }
 
     public function teachingAssignments(): HasMany

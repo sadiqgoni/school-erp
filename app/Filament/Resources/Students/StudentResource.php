@@ -11,6 +11,7 @@ use App\Filament\Resources\Students\Schemas\StudentForm;
 use App\Filament\Resources\Students\Tables\StudentsTable;
 use App\Models\Student;
 use BackedEnum;
+use Filament\Facades\Filament;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\RepeatableEntry;
@@ -21,6 +22,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class StudentResource extends Resource
 {
@@ -36,6 +38,8 @@ class StudentResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
+    protected static ?string $recordTitleAttribute = 'admission_number';
+
     public static function form(Schema $schema): Schema
     {
         return StudentForm::configure($schema);
@@ -44,6 +48,51 @@ class StudentResource extends Resource
     public static function table(Table $table): Table
     {
         return StudentsTable::configure($table);
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['admission_number', 'first_name', 'middle_name', 'last_name'];
+    }
+
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return $record->full_name ?: $record->admission_number;
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return array_filter([
+            'Admission No.' => $record->admission_number,
+            'Status' => $record->status,
+            'School' => $record->school?->name,
+        ]);
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $tenant = Filament::getTenant();
+
+        if (! $tenant) {
+            return null;
+        }
+
+        $count = Student::query()
+            ->where('school_id', $tenant->getKey())
+            ->where('status', 'active')
+            ->count();
+
+        return (string) $count;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'info';
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Active students in this section';
     }
 
     public static function infolist(Schema $schema): Schema

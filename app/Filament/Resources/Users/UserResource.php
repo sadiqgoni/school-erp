@@ -35,6 +35,8 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 20;
 
+    protected static ?string $recordTitleAttribute = 'name';
+
     public static function getNavigationLabel(): string
     {
         return Filament::getCurrentPanel()?->getId() === 'school' ? 'Users & Access' : 'Users';
@@ -48,6 +50,19 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return UsersTable::configure($table);
+    }
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'email'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return array_filter([
+            'Email' => $record->email,
+            'Role' => $record->isSuperAdmin() ? 'Superadmin' : ($record->role ?: null),
+        ]);
     }
 
     public static function infolist(Schema $schema): Schema

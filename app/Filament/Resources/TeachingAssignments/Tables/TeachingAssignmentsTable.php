@@ -31,11 +31,15 @@ class TeachingAssignmentsTable
                     ->sortable(),
                 TextColumn::make('schoolClass.name')->label('Class')->sortable(),
                 TextColumn::make('classSection.name')->label('Arm')->placeholder('Whole class'),
+                TextColumn::make('subject.name')
+                    ->label('Subject')
+                    ->placeholder('Class teacher'),
                 TextColumn::make('assignment_role')
                     ->label('Role')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'form_teacher' => 'Form teacher',
                         'assistant_form_teacher' => 'Assistant form teacher',
+                        'subject_teacher' => 'Subject teacher',
                         default => ucfirst(str_replace('_', ' ', $state)),
                     }),
                 IconColumn::make('is_class_teacher')->boolean(),

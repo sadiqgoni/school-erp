@@ -38,6 +38,7 @@ class UserForm
                             ->label('School role')
                             ->options([
                                 User::SCHOOL_ROLE_ADMIN => 'Admin',
+                                User::SCHOOL_ROLE_FINANCE => 'Finance',
                                 User::SCHOOL_ROLE_TEACHER => 'Teacher',
                                 User::SCHOOL_ROLE_STAFF => 'Staff',
                                 User::SCHOOL_ROLE_PARENT => 'Parent',

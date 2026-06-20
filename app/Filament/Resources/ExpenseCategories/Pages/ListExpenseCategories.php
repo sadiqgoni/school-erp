@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\ExpenseCategories\Pages;
 
 use App\Filament\Resources\ExpenseCategories\ExpenseCategoryResource;
-use App\Models\ExpenseCategory;
+use App\Support\FinanceSampleSetup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
@@ -17,11 +17,14 @@ class ListExpenseCategories extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('generateCommonExpenseCategories')
-                ->label('Generate common categories')
-                ->icon('heroicon-o-sparkles')
-                ->color('primary')
+            Action::make('sampleExpenseCategories')
+                ->label('Sample categories')
+                ->icon('heroicon-m-sparkles')
+                ->color('success')
                 ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'school')
+                ->requiresConfirmation()
+                ->modalHeading('Create sample expense categories?')
+                ->modalDescription('This will add section-appropriate expense categories without deleting existing records.')
                 ->action(function (): void {
                     $tenant = Filament::getTenant();
 
@@ -29,29 +32,12 @@ class ListExpenseCategories extends ListRecords
                         return;
                     }
 
-                    $count = 0;
-
-                    foreach ([
-                        'Salaries',
-                        'Fuel & Transport',
-                        'Repairs & Maintenance',
-                        'Stationery & Printing',
-                        'Utilities',
-                        'Events & Ceremonies',
-                        'Teaching Materials',
-                        'Security',
-                    ] as $name) {
-                        ExpenseCategory::query()->updateOrCreate(
-                            ['school_id' => $tenant->getKey(), 'name' => $name],
-                            ['description' => null, 'is_active' => true],
-                        );
-                        $count++;
-                    }
+                    $count = FinanceSampleSetup::createExpenseCategories($tenant);
 
                     Notification::make()
                         ->success()
-                        ->title('Expense categories created')
-                        ->body("Prepared {$count} common expense categories for this school.")
+                        ->title('Sample categories ready')
+                        ->body("{$count} expense categories are available for this section.")
                         ->send();
                 }),
             CreateAction::make(),

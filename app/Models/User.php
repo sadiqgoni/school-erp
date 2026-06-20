@@ -36,6 +36,8 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public const SCHOOL_ROLE_STAFF = 'staff';
 
+    public const SCHOOL_ROLE_FINANCE = 'finance';
+
     public const SCHOOL_ROLE_PARENT = 'parent';
 
     protected static function booted(): void

@@ -158,6 +158,57 @@ body {
     color: #ffffff !important;
 }
 
+.fi-sidebar .fi-badge,
+.fi-sidebar .fi-sidebar-item-badge {
+    min-width: 1.35rem;
+    border: 1px solid rgba(255, 255, 255, 0.75) !important;
+    box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.22), 0 8px 18px rgba(15, 23, 42, 0.18);
+    font-weight: 800;
+}
+
+.fi-sidebar .fi-badge,
+.fi-sidebar .fi-badge *,
+.fi-sidebar .fi-sidebar-item-badge,
+.fi-sidebar .fi-sidebar-item-badge * {
+    color: #ffffff !important;
+}
+
+.fi-sidebar .fi-color-danger,
+.fi-sidebar .fi-color-danger.fi-badge,
+.fi-sidebar .fi-color-danger.fi-sidebar-item-badge {
+    background: #dc2626 !important;
+}
+
+.fi-sidebar .fi-color-warning,
+.fi-sidebar .fi-color-warning.fi-badge,
+.fi-sidebar .fi-color-warning.fi-sidebar-item-badge {
+    background: #d97706 !important;
+}
+
+.fi-sidebar .fi-color-success,
+.fi-sidebar .fi-color-success.fi-badge,
+.fi-sidebar .fi-color-success.fi-sidebar-item-badge {
+    background: #16a34a !important;
+}
+
+.fi-sidebar .fi-color-info,
+.fi-sidebar .fi-color-info.fi-badge,
+.fi-sidebar .fi-color-info.fi-sidebar-item-badge {
+    background: #0284c7 !important;
+}
+
+.fi-sidebar .fi-color-primary,
+.fi-sidebar .fi-color-primary.fi-badge,
+.fi-sidebar .fi-color-primary.fi-sidebar-item-badge {
+    background: #0d9488 !important;
+}
+
+.fi-sidebar .fi-color-gray,
+.fi-sidebar .fi-color-gray.fi-badge,
+.fi-sidebar .fi-color-gray.fi-sidebar-item-badge {
+    background: #475569 !important;
+}
+
 .fi-sidebar-nav::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.28);
     border-radius: 999px;

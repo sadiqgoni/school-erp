@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\SplitLogin;
+use App\Filament\Widgets\FinanceSnapshot;
 use App\Filament\Widgets\ParentDashboardSummary;
 use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
@@ -17,6 +18,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -41,10 +43,17 @@ class SchoolPanelProvider extends PanelProvider
                 'primary' => Color::Teal,
                 'gray' => Color::Slate,
             ])
+            ->globalSearch()
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->globalSearchFieldKeyBindingSuffix()
             ->tenant(School::class, slugAttribute: 'slug')
             ->tenantMenu()
             ->sidebarWidth('280px')
             ->sidebarCollapsibleOnDesktop()
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_LOGO_AFTER,
+                fn (): \Illuminate\Contracts\View\View => view('filament.partials.portal-role-badge'),
+            )
             ->viteTheme('resources/css/filament/panel-theme.css')
             ->navigationGroups([
                 'Parent Portal',
@@ -52,6 +61,7 @@ class SchoolPanelProvider extends PanelProvider
                 'School Setup',
                 'Students',
                 'Staff',
+                'Payroll',
                 'Finance Setup',
                 'Billing & Payments',
                 'Accounts',
@@ -66,6 +76,7 @@ class SchoolPanelProvider extends PanelProvider
             ->widgets([
                 TeacherDashboard::class,
                 ParentDashboardSummary::class,
+                FinanceSnapshot::class,
                 SchoolWelcomeHero::class,
                 SchoolDashboardSummary::class,
                 // AccountWidget::class,

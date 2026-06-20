@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\ParentInvoices\Tables;
 
 use App\Models\StudentInvoice;
+use App\Support\Payments\PaystackGateway;
+use App\Support\Payments\PaymentInitialization;
 use App\Support\Payments\SimulatedPaymentGateway;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -26,29 +28,46 @@ class ParentInvoicesTable
                 TextColumn::make('student.enrollments.schoolClass.name')
                     ->label('Class')
                     ->state(fn (StudentInvoice $record): string => self::placementLabel($record))
-                    ->badge(),
+                    ->badge()
+                    ->color('info'),
                 TextColumn::make('invoice_number')
                     ->label('Invoice')
                     ->searchable()
                     ->sortable()
-                    ->description(fn (StudentInvoice $record): ?string => $record->invoice_date?->format('d M Y')),
+                    ->description(fn (StudentInvoice $record): ?string => 'Issued '.$record->invoice_date?->format('d M Y')),
                 TextColumn::make('invoice_type')
                     ->label('Type')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'standard' => 'Standard',
+                        'emergency' => 'One-off',
+                        default => str($state)->replace('_', ' ')->title()->toString(),
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'standard' => 'primary',
+                        'emergency' => 'warning',
+                        default => 'gray',
+                    })
                     ->sortable(),
                 TextColumn::make('total')
+                    ->label('Invoice total')
                     ->money('NGN')
                     ->sortable(),
                 TextColumn::make('amount_paid')
-                    ->label('Paid')
-                    ->money('NGN')
-                    ->sortable(),
-                TextColumn::make('balance')
+                    ->label('Received')
                     ->money('NGN')
                     ->sortable()
-                    ->weight('bold'),
+                    ->weight('semibold')
+                    ->color('success'),
+                TextColumn::make('balance')
+                    ->label('Outstanding')
+                    ->money('NGN')
+                    ->sortable()
+                    ->weight('bold')
+                    ->color(fn ($state): string => ((float) $state) > 0 ? 'warning' : 'success'),
                 TextColumn::make('status')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()->toString())
                     ->color(fn (string $state): string => match ($state) {
                         'paid' => 'success',
                         'partial' => 'warning',
@@ -73,7 +92,7 @@ class ParentInvoicesTable
             ])
             ->recordActions([
                 Action::make('downloadPdf')
-                    ->label('PDF')
+                    ->label('Invoice slip')
                     ->icon('heroicon-o-document-arrow-down')
                     ->url(fn (StudentInvoice $record): string => route('student-invoices.pdf', $record))
                     ->openUrlInNewTab(),
@@ -107,7 +126,7 @@ class ParentInvoicesTable
             return $invoice->payment_url;
         }
 
-        $initialization = app(SimulatedPaymentGateway::class)->initialize($invoice);
+        $initialization = self::initializePayment($invoice);
 
         $invoice->forceFill([
             'payment_provider' => $initialization->provider,
@@ -118,6 +137,14 @@ class ParentInvoicesTable
         ])->save();
 
         return $initialization->authorizationUrl;
+    }
+
+    protected static function initializePayment(StudentInvoice $invoice): PaymentInitialization
+    {
+        return match (config('services.payments.default', 'simulated')) {
+            'paystack' => app(PaystackGateway::class)->initialize($invoice),
+            default => app(SimulatedPaymentGateway::class)->initialize($invoice),
+        };
     }
 
     protected static function childOptions(): array

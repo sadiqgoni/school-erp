@@ -13,6 +13,26 @@ trait SchoolPanelResource
         'App\\Filament\\Resources\\StudentScores\\StudentScoreResource',
     ];
 
+    protected static array $financeResources = [
+        'App\\Filament\\Resources\\AccountTransactions\\AccountTransactionResource',
+        'App\\Filament\\Resources\\AccountTransfers\\AccountTransferResource',
+        'App\\Filament\\Resources\\BankAccounts\\BankAccountResource',
+        'App\\Filament\\Resources\\ExpenseCategories\\ExpenseCategoryResource',
+        'App\\Filament\\Resources\\Expenses\\ExpenseResource',
+        'App\\Filament\\Resources\\FeePayments\\FeePaymentResource',
+        'App\\Filament\\Resources\\FeeStructures\\FeeStructureResource',
+        'App\\Filament\\Resources\\FeeTypes\\FeeTypeResource',
+        'App\\Filament\\Resources\\LedgerAccounts\\LedgerAccountResource',
+        'App\\Filament\\Resources\\PayrollItemTypes\\PayrollItemTypeResource',
+        'App\\Filament\\Resources\\PayrollSheets\\PayrollSheetResource',
+        'App\\Filament\\Resources\\PayrollSnapshots\\PayrollSnapshotResource',
+        'App\\Filament\\Resources\\SalaryPostings\\SalaryPostingResource',
+        'App\\Filament\\Resources\\SalaryTemplates\\SalaryTemplateResource',
+        'App\\Filament\\Resources\\StaffBanks\\StaffBankResource',
+        'App\\Filament\\Resources\\StudentDiscounts\\StudentDiscountResource',
+        'App\\Filament\\Resources\\StudentInvoices\\StudentInvoiceResource',
+    ];
+
     public static function canAccess(): bool
     {
         return static::canAccessSchoolResource() && parent::canAccess();
@@ -26,6 +46,10 @@ trait SchoolPanelResource
 
         if (static::isParentUser()) {
             return false;
+        }
+
+        if (static::isFinanceUser()) {
+            return static::isFinanceResource();
         }
 
         return ! static::isTeacherUser() || static::isTeacherResource();
@@ -74,6 +98,10 @@ trait SchoolPanelResource
             return false;
         }
 
+        if (static::isFinanceUser()) {
+            return static::isFinanceResource();
+        }
+
         return ! static::isTeacherUser() || static::isTeacherResource();
     }
 
@@ -82,6 +110,13 @@ trait SchoolPanelResource
         $user = Filament::auth()->user();
 
         return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'teacher');
+    }
+
+    protected static function isFinanceUser(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) $user?->hasSchoolRole(Filament::getTenant(), 'finance');
     }
 
     protected static function isParentUser(): bool
@@ -94,5 +129,10 @@ trait SchoolPanelResource
     protected static function isTeacherResource(): bool
     {
         return in_array(static::class, static::$teacherResources, true);
+    }
+
+    protected static function isFinanceResource(): bool
+    {
+        return in_array(static::class, static::$financeResources, true);
     }
 }

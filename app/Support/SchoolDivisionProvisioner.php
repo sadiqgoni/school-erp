@@ -10,6 +10,35 @@ use Illuminate\Support\Str;
 
 class SchoolDivisionProvisioner
 {
+    public static function syncSections(School $school, ?array $divisions = null): Collection
+    {
+        $rootSchool = $school->parent_school_id
+            ? School::query()->withoutGlobalScopes()->findOrFail($school->parent_school_id)
+            : $school;
+
+        $selectedDivisions = collect($divisions ?: array_keys(School::DIVISIONS))
+            ->filter(fn (string $division): bool => array_key_exists($division, School::DIVISIONS))
+            ->unique()
+            ->values()
+            ->all();
+
+        $divisionSchools = self::provision($rootSchool, $selectedDivisions);
+
+        $divisionSchools->each(function (School $divisionSchool): void {
+            $divisionSchool->forceFill(['is_active' => true])->saveQuietly();
+        });
+
+        self::attachUsersFromParent($rootSchool, $selectedDivisions);
+
+        School::query()
+            ->withoutGlobalScopes()
+            ->where('parent_school_id', $rootSchool->getKey())
+            ->whereNotIn('division', $selectedDivisions)
+            ->update(['is_active' => false]);
+
+        return $divisionSchools;
+    }
+
     public static function provision(School $school, ?array $divisions = null): Collection
     {
         if ($school->division) {

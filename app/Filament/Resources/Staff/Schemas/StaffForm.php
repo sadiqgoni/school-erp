@@ -3,7 +3,10 @@
 namespace App\Filament\Resources\Staff\Schemas;
 
 use App\Filament\Support\SchoolSelect;
+use App\Models\PayrollSheet;
+use App\Models\SalaryTemplate;
 use App\Models\Staff;
+use App\Models\StaffBank;
 use App\Models\StaffRole;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
@@ -13,6 +16,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Wizard;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class StaffForm
@@ -137,12 +141,69 @@ class StaffForm
                                     'contract' => 'Contract',
                                     'temporary' => 'Temporary',
                                 ]),
-                            DatePicker::make('hire_date'),
+                            DatePicker::make('hire_date')
+                                ->label('Appointment date')
+                                ->placeholder('Not set'),
                             TextInput::make('basic_salary')
                                 ->numeric()
                                 ->prefix('NGN'),
+                            Select::make('salary_template_id')
+                                ->label('Salary scale')
+                                ->options(fn (): array => SalaryTemplate::query()
+                                    ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
+                                    ->where('is_active', true)
+                                    ->orderBy('code')
+                                    ->get()
+                                    ->mapWithKeys(fn (SalaryTemplate $template): array => [
+                                        $template->getKey() => "{$template->code} - {$template->name} (NGN ".number_format((float) $template->monthly_basic, 2).')',
+                                    ])
+                                    ->all())
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->afterStateUpdated(function (?int $state, Set $set): void {
+                                    $template = SalaryTemplate::query()->find($state);
+                                    $set('basic_salary', $template?->monthly_basic);
+                                    $set('salary_grade_level', $template?->grade_level);
+                                    $set('salary_step', $template?->step);
+                                })
+                                ->helperText('Pick a grade level and step to fill the monthly basic salary.'),
+                            TextInput::make('salary_grade_level')
+                                ->label('Grade level')
+                                ->maxLength(50)
+                                ->placeholder('GL 08'),
+                            TextInput::make('salary_step')
+                                ->label('Step')
+                                ->maxLength(50)
+                                ->placeholder('01'),
+                            Select::make('payroll_sheet_id')
+                                ->label('Payroll sheet')
+                                ->options(fn (): array => PayrollSheet::query()
+                                    ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->all())
+                                ->searchable()
+                                ->preload()
+                                ->helperText('Assign this staff member to the payroll sheet that should carry them each month.'),
+                            Select::make('staff_bank_id')
+                                ->label('Bank name')
+                                ->options(fn (): array => StaffBank::query()
+                                    ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
+                                    ->where('is_active', true)
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id')
+                                    ->all())
+                                ->searchable()
+                                ->preload()
+                                ->live()
+                                ->afterStateUpdated(fn (?int $state, Set $set): mixed => $set('bank_name', StaffBank::query()->whereKey($state)->value('name')))
+                                ->helperText('Register staff banks first, then pick the staff salary bank here.'),
                             TextInput::make('bank_name')
-                                ->maxLength(255),
+                                ->maxLength(255)
+                                ->disabled()
+                                ->dehydrated(),
                             TextInput::make('bank_account_name')
                                 ->maxLength(255),
                             TextInput::make('bank_account_number')

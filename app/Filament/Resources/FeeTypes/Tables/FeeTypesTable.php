@@ -21,7 +21,11 @@ class FeeTypesTable
                     ->searchable()
                     ->sortable()
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                TextColumn::make('name')->searchable()->sortable(),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn ($record): ?string => $record->description),
                 TextColumn::make('code')->badge()->searchable(),
                 IconColumn::make('is_required')->boolean(),
                 IconColumn::make('is_active')->boolean(),

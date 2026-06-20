@@ -31,20 +31,35 @@ class StudentsTable
                     ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
                 TextColumn::make('admission_number')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
                 TextColumn::make('full_name')
                     ->label('Student')
                     ->searchable()
                     ->sortable(['last_name'])
+                    ->weight('semibold')
                     ->description(fn ($record): string => collect([
                         $record->gender ? ucfirst($record->gender) : null,
                         $record->date_of_birth?->format('d M Y'),
                     ])->filter()->implode('  ·  ')),
+                TextColumn::make('age')
+                    ->label('Age')
+                    ->state(fn ($record): ?string => $record->date_of_birth ? $record->date_of_birth->age.' yrs' : null)
+                    ->badge()
+                    ->color('primary')
+                    ->placeholder('Not set'),
                 TextColumn::make('gender')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'male' => 'info',
+                        'female' => 'danger',
+                        default => 'gray',
+                    }),
                 TextColumn::make('enrollments.schoolClass.name')
                     ->label('Class')
                     ->badge()
+                    ->color('info')
                     ->separator(',')
                     ->placeholder('No class')
                     ->toggleable(),
@@ -97,6 +112,8 @@ class StudentsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('last_name')
+            ->striped();
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Enrollments\Schemas;
 
 use App\Filament\Support\SchoolSelect;
+use App\Models\Term;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -28,10 +30,18 @@ class EnrollmentForm
                             ->searchable()
                             ->preload()
                             ->required(),
-                        Select::make('term_id')
-                            ->relationship('term', 'name')
+                        Select::make('term_ids')
+                            ->label('Terms')
+                            ->options(fn (): array => Term::query()
+                                ->when(Filament::getTenant(), fn ($query, $tenant) => $query->where('school_id', $tenant->getKey()))
+                                ->orderBy('position')
+                                ->pluck('name', 'id')
+                                ->all())
+                            ->multiple()
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->dehydrated(false)
+                            ->helperText('Select one term, multiple terms, or leave empty for a full-session placement.'),
                         Select::make('school_class_id')
                             ->relationship('schoolClass', 'name')
                             ->searchable()

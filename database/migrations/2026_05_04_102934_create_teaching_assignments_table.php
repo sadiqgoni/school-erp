@@ -19,12 +19,13 @@ return new class extends Migration
             $table->foreignId('term_id')->nullable()->constrained()->nullOnDelete();
             $table->foreignId('school_class_id')->constrained()->cascadeOnDelete();
             $table->foreignId('class_section_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
+            $table->string('assignment_role', 40)->default('form_teacher');
+            $table->foreignId('subject_id')->nullable()->constrained()->cascadeOnDelete();
             $table->boolean('is_class_teacher')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
 
-            $table->unique(['staff_id', 'academic_year_id', 'school_class_id', 'class_section_id', 'subject_id'], 'teaching_assignment_unique');
+            $table->unique(['staff_id', 'academic_year_id', 'term_id', 'school_class_id', 'class_section_id', 'subject_id'], 'teaching_assignment_unique');
             $table->index(['school_id', 'academic_year_id', 'school_class_id'], 'teach_school_year_class_idx');
         });
     }
