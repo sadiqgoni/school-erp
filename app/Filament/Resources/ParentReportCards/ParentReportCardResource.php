@@ -20,9 +20,9 @@ class ParentReportCardResource extends Resource
 
     protected static ?string $navigationLabel = 'My Results';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Parent Portal';
+    protected static string|\UnitEnum|null $navigationGroup = 'Academics & Fees';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 20;
 
     public static function canAccess(): bool
     {

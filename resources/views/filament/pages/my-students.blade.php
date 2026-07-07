@@ -23,41 +23,44 @@
                         </span>
                     </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-slate-100 text-sm dark:divide-white/10">
-                            <thead>
-                                <tr class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-white/5 dark:text-slate-400">
-                                    <th class="px-5 py-3">Student</th>
-                                    <th class="px-5 py-3">Admission No.</th>
-                                    <th class="px-5 py-3">Gender</th>
-                                    <th class="px-5 py-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-white/10">
-                                @forelse ($group['enrollments'] as $enrollment)
-                                    <tr>
-                                        <td class="px-5 py-3 font-medium text-slate-900 dark:text-white">
-                                            {{ $enrollment->student?->full_name }}
-                                        </td>
-                                        <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
-                                            {{ $enrollment->student?->admission_number }}
-                                        </td>
-                                        <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
-                                            {{ str($enrollment->student?->gender)->title() }}
-                                        </td>
-                                        <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
-                                            {{ str($enrollment->student?->status)->title() }}
-                                        </td>
+                    <div class="responsive-table-shell">
+                        <div class="responsive-table-shell__hint">Scroll sideways to see the full class list.</div>
+                        <div class="responsive-table-scroll">
+                            <table class="responsive-data-table min-w-[42rem] divide-y divide-slate-100 text-sm dark:divide-white/10">
+                                <thead>
+                                    <tr class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                                        <th class="sticky left-0 z-10 bg-slate-50 px-5 py-3 dark:bg-slate-900">Student</th>
+                                        <th class="px-5 py-3">Admission No.</th>
+                                        <th class="px-5 py-3">Gender</th>
+                                        <th class="px-5 py-3">Status</th>
                                     </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
-                                            No active students found for this class.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 dark:divide-white/10">
+                                    @forelse ($group['enrollments'] as $enrollment)
+                                        <tr>
+                                            <td class="sticky left-0 z-10 bg-white px-5 py-3 font-medium text-slate-900 dark:bg-slate-900 dark:text-white">
+                                                {{ $enrollment->student?->full_name }}
+                                            </td>
+                                            <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
+                                                {{ $enrollment->student?->admission_number }}
+                                            </td>
+                                            <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
+                                                {{ str($enrollment->student?->gender)->title() }}
+                                            </td>
+                                            <td class="px-5 py-3 text-slate-600 dark:text-slate-300">
+                                                {{ str($enrollment->student?->status)->title() }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="4" class="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
+                                                No active students found for this class.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </section>
             @endforeach

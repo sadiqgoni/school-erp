@@ -35,6 +35,7 @@ use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Models\Term;
 use App\Models\User;
+use App\Support\SafetyTransportSampleSetup;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -505,6 +506,8 @@ class DatabaseSeeder extends Seeder
                 'notes' => 'Seeded demo payment',
             ],
         );
+
+        SafetyTransportSampleSetup::createForSchool($school);
 
         $utilities = ExpenseCategory::query()->updateOrCreate(
             [

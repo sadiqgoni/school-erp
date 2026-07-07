@@ -8,9 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 trait SchoolPanelResource
 {
     protected static array $teacherResources = [
+        'App\\Filament\\Resources\\Assignments\\AssignmentResource',
         'App\\Filament\\Resources\\ClassSubjects\\ClassSubjectResource',
+        'App\\Filament\\Resources\\Enrollments\\EnrollmentResource',
+        'App\\Filament\\Resources\\Notices\\NoticeResource',
         'App\\Filament\\Resources\\ReportCards\\ReportCardResource',
         'App\\Filament\\Resources\\StudentScores\\StudentScoreResource',
+        'App\\Filament\\Resources\\TimetableEntries\\TimetableEntryResource',
+    ];
+
+    protected static array $teacherWritableResources = [
+        'App\\Filament\\Resources\\Assignments\\AssignmentResource',
+        'App\\Filament\\Resources\\Notices\\NoticeResource',
+        'App\\Filament\\Resources\\TimetableEntries\\TimetableEntryResource',
     ];
 
     protected static array $financeResources = [
@@ -66,7 +76,15 @@ trait SchoolPanelResource
             return false;
         }
 
-        return ! static::isTeacherUser() && ! static::isParentUser() && parent::canCreate();
+        if (static::isParentUser()) {
+            return false;
+        }
+
+        if (static::isTeacherUser()) {
+            return static::isTeacherWritableResource() && parent::canCreate();
+        }
+
+        return parent::canCreate();
     }
 
     public static function canView(Model $record): bool
@@ -80,7 +98,15 @@ trait SchoolPanelResource
             return false;
         }
 
-        return ! static::isTeacherUser() && ! static::isParentUser() && parent::canEdit($record);
+        if (static::isParentUser()) {
+            return false;
+        }
+
+        if (static::isTeacherUser()) {
+            return static::isTeacherWritableResource() && parent::canEdit($record);
+        }
+
+        return parent::canEdit($record);
     }
 
     protected static function isSchoolPanel(): bool
@@ -129,6 +155,11 @@ trait SchoolPanelResource
     protected static function isTeacherResource(): bool
     {
         return in_array(static::class, static::$teacherResources, true);
+    }
+
+    protected static function isTeacherWritableResource(): bool
+    {
+        return in_array(static::class, static::$teacherWritableResources, true);
     }
 
     protected static function isFinanceResource(): bool

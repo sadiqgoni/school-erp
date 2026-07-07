@@ -7,14 +7,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::table('staff')
-            ->join('salary_templates', 'staff.salary_template_id', '=', 'salary_templates.id')
-            ->whereNull('staff.salary_grade_level')
-            ->update([
-                'staff.salary_grade_level' => DB::raw('salary_templates.grade_level'),
-                'staff.salary_step' => DB::raw('salary_templates.step'),
-                'staff.basic_salary' => DB::raw('salary_templates.monthly_basic'),
-            ]);
+        DB::table('salary_templates')
+            ->orderBy('id')
+            ->get(['id', 'grade_level', 'step', 'monthly_basic'])
+            ->each(function (object $template): void {
+                DB::table('staff')
+                    ->where('salary_template_id', $template->id)
+                    ->whereNull('salary_grade_level')
+                    ->update([
+                        'salary_grade_level' => $template->grade_level,
+                        'salary_step' => $template->step,
+                        'basic_salary' => $template->monthly_basic,
+                    ]);
+            });
     }
 
     public function down(): void

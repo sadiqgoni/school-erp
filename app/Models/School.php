@@ -231,14 +231,14 @@ class School extends Model implements HasAvatar, HasName
             ->withoutGlobalScopes()
             ->where('parent_school_id', $this->getKey())
             ->where('is_active', true)
-            ->orderByRaw("FIELD(division, 'nursery', 'primary', 'secondary')")
+            ->orderByRaw("case division when 'nursery' then 1 when 'primary' then 2 when 'secondary' then 3 else 4 end")
             ->orderBy('id')
             ->first() ?? $this;
     }
 
     public function portalUrl(): string
     {
-        return url('/portal/' . $this->portalSchool()->slug);
+        return url('/portal/'.$this->portalSchool()->slug);
     }
 
     protected function slug(): Attribute

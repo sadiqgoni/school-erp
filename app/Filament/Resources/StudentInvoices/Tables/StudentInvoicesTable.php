@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StudentInvoices\Tables;
 
+use App\Support\WhatsApp;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -132,6 +133,15 @@ class StudentInvoicesTable
                     ->label('Invoice slip')
                     ->icon('heroicon-o-document-arrow-down')
                     ->url(fn ($record): string => route('student-invoices.pdf', $record))
+                    ->openUrlInNewTab(),
+                Action::make('whatsappReminder')
+                    ->label('WhatsApp parent')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('success')
+                    ->visible(fn ($record): bool => (float) $record->balance > 0
+                        && $record->status !== 'cancelled'
+                        && filled(WhatsApp::invoiceReminderLink($record)))
+                    ->url(fn ($record): string => WhatsApp::invoiceReminderLink($record))
                     ->openUrlInNewTab(),
                 EditAction::make(),
             ])

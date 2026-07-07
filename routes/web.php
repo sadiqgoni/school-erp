@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\ReportCardPdfController;
+use App\Http\Controllers\DeviceEventController;
+use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\PaystackPaymentCallbackController;
 use App\Http\Controllers\PaystackWebhookController;
-use App\Http\Controllers\PaymentReceiptController;
+use App\Http\Controllers\ReportCardPdfController;
 use App\Http\Controllers\SalaryMonthReportPdfController;
 use App\Http\Controllers\SalaryPostingPdfController;
 use App\Http\Controllers\SimulatedPaymentCheckoutController;
@@ -32,6 +33,9 @@ Route::get('/payments/paystack/callback', PaystackPaymentCallbackController::cla
 
 Route::post('/payments/paystack/webhook', PaystackWebhookController::class)
     ->name('payments.paystack.webhook');
+
+Route::post('/devices/events', DeviceEventController::class)
+    ->name('devices.events');
 
 Route::get('/payments/receipt', PaymentReceiptController::class)
     ->name('payments.receipt');

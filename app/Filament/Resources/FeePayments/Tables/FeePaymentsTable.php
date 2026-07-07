@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FeePayments\Tables;
 
+use App\Support\WhatsApp;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -70,11 +71,11 @@ class FeePaymentsTable
                 TextColumn::make('status')->badge()
                     ->formatStateUsing(fn (string $state): string => str($state)->title()->toString())
                     ->color(fn (string $state): string => match ($state) {
-                    'confirmed' => 'success',
-                    'pending' => 'warning',
-                    'failed', 'reversed' => 'danger',
-                    default => 'gray',
-                }),
+                        'confirmed' => 'success',
+                        'pending' => 'warning',
+                        'failed', 'reversed' => 'danger',
+                        default => 'gray',
+                    }),
                 IconColumn::make('acknowledged_at')
                     ->label('Seen')
                     ->boolean()
@@ -84,54 +85,61 @@ class FeePaymentsTable
                     ->toggleable(),
             ])
             ->filters([
-                SelectFilter::make('school')
-                    ->relationship('school', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
-                SelectFilter::make('payment_method')->options([
-                    'cash' => 'Cash',
-                    'bank_transfer' => 'Bank transfer',
-                    'pos' => 'POS',
-                    'card' => 'Card',
-                    'online' => 'Online',
-                ]),
-                SelectFilter::make('status')->options([
-                    'pending' => 'Pending',
-                    'confirmed' => 'Confirmed',
-                    'failed' => 'Failed',
-                    'reversed' => 'Reversed',
-                ]),
-                TernaryFilter::make('acknowledged_at')
-                    ->label('Seen')
-                    ->nullable(),
+                    SelectFilter::make('school')
+                        ->relationship('school', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->visible(fn (): bool => Filament::getCurrentPanel()?->getId() === 'admin'),
+                    SelectFilter::make('payment_method')->options([
+                        'cash' => 'Cash',
+                        'bank_transfer' => 'Bank transfer',
+                        'pos' => 'POS',
+                        'card' => 'Card',
+                        'online' => 'Online',
+                    ]),
+                    SelectFilter::make('status')->options([
+                        'pending' => 'Pending',
+                        'confirmed' => 'Confirmed',
+                        'failed' => 'Failed',
+                        'reversed' => 'Reversed',
+                    ]),
+                    TernaryFilter::make('acknowledged_at')
+                        ->label('Seen')
+                        ->nullable(),
             ])
             ->recordActions([
-                Action::make('confirmSeen')
-                    ->label('Confirm seen')
-                    ->icon('heroicon-m-check-circle')
-                    ->color('danger')
-                    ->visible(fn ($record): bool => $record->status === 'confirmed' && blank($record->acknowledged_at))
-                    ->requiresConfirmation()
-                    ->modalHeading('Confirm this payment as seen?')
-                    ->modalDescription('This removes this payment from the sidebar notification count. It does not change the receipt or accounting entries.')
-                    ->action(function ($record): void {
-                        $record->forceFill([
-                            'acknowledged_at' => now(),
-                            'acknowledged_by_id' => Filament::auth()->id(),
-                        ])->save();
+                    Action::make('confirmSeen')
+                        ->label('Confirm seen')
+                        ->icon('heroicon-m-check-circle')
+                        ->color('danger')
+                        ->visible(fn ($record): bool => $record->status === 'confirmed' && blank($record->acknowledged_at))
+                        ->requiresConfirmation()
+                        ->modalHeading('Confirm this payment as seen?')
+                        ->modalDescription('This removes this payment from the sidebar notification count. It does not change the receipt or accounting entries.')
+                        ->action(function ($record): void {
+                            $record->forceFill([
+                                'acknowledged_at' => now(),
+                                'acknowledged_by_id' => Filament::auth()->id(),
+                            ])->save();
 
-                        Notification::make()
-                            ->success()
-                            ->title('Payment confirmed as seen')
-                            ->body("{$record->receipt_number} has been cleared from new payments.")
-                            ->send();
-                    }),
-                EditAction::make(),
+                            Notification::make()
+                                ->success()
+                                ->title('Payment confirmed as seen')
+                                ->body("{$record->receipt_number} has been cleared from new payments.")
+                                ->send();
+                        }),
+                    Action::make('whatsappReceipt')
+                        ->label('WhatsApp receipt')
+                        ->icon('heroicon-o-chat-bubble-left-right')
+                        ->color('success')
+                        ->visible(fn ($record): bool => filled(WhatsApp::receiptLink($record)))
+                        ->url(fn ($record): string => WhatsApp::receiptLink($record))
+                        ->openUrlInNewTab(),
+                    EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                        DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('payment_date', 'desc')

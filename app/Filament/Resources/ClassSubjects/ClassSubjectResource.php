@@ -40,8 +40,15 @@ class ClassSubjectResource extends Resource
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher')
-            ? 'Teacher Portal'
+            ? 'Teacher Workspace'
             : static::$navigationGroup;
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return Filament::auth()->user()?->hasSchoolRole(Filament::getTenant(), 'teacher')
+            ? 50
+            : static::$navigationSort;
     }
 
     public static function form(Schema $schema): Schema

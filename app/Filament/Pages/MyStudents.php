@@ -16,9 +16,9 @@ class MyStudents extends Page
 
     protected static ?string $title = 'My Class Students';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Teacher Portal';
+    protected static string|\UnitEnum|null $navigationGroup = 'Teacher Workspace';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 20;
 
     protected string $view = 'filament.pages.my-students';
 

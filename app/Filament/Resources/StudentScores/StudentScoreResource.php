@@ -37,7 +37,12 @@ class StudentScoreResource extends Resource
 
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
-        return TeacherWorkspace::isTeacher() ? 'Teacher Portal' : static::$navigationGroup;
+        return TeacherWorkspace::isTeacher() ? 'Teacher Workspace' : static::$navigationGroup;
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return TeacherWorkspace::isTeacher() ? 70 : static::$navigationSort;
     }
 
     public static function form(Schema $schema): Schema

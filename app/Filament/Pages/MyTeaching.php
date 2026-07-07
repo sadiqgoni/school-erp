@@ -11,13 +11,13 @@ class MyTeaching extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
 
-    protected static ?string $navigationLabel = 'My Classes & Subjects';
+    protected static ?string $navigationLabel = 'Overview';
 
     protected static ?string $title = 'My Classes & Subjects';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Teacher Portal';
+    protected static string|\UnitEnum|null $navigationGroup = 'Teacher Workspace';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 10;
 
     protected string $view = 'filament.pages.my-teaching';
 

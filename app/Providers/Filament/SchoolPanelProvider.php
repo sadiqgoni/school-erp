@@ -20,6 +20,7 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -52,12 +53,16 @@ class SchoolPanelProvider extends PanelProvider
             ->sidebarCollapsibleOnDesktop()
             ->renderHook(
                 PanelsRenderHook::TOPBAR_LOGO_AFTER,
-                fn (): \Illuminate\Contracts\View\View => view('filament.partials.portal-role-badge'),
+                fn (): View => view('filament.partials.portal-role-badge'),
             )
             ->viteTheme('resources/css/filament/panel-theme.css')
             ->navigationGroups([
                 'Parent Portal',
-                'Teacher Portal',
+                'Academics & Fees',
+                'Teacher Workspace',
+                'Class Management',
+                'Classroom',
+                'Communication',
                 'School Setup',
                 'Students',
                 'Staff',
@@ -66,6 +71,7 @@ class SchoolPanelProvider extends PanelProvider
                 'Billing & Payments',
                 'Accounts',
                 'Exams & Reports',
+                'Safety & Transport',
                 'System',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

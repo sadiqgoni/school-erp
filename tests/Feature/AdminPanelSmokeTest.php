@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\School;
 use App\Models\Staff;
 use App\Models\Student;
-use App\Models\School;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -219,11 +219,24 @@ class AdminPanelSmokeTest extends TestCase
             ->assertRedirect("/portal/{$school->slug}");
     }
 
-    public function test_admin_registration_route_is_not_public(): void
+    public function test_admin_registration_is_closed_once_a_user_exists(): void
     {
+        User::query()->create([
+            'name' => 'Existing Admin',
+            'email' => 'existing@example.com',
+            'password' => Hash::make('password'),
+        ]);
+
         $this
             ->get('/admin/register')
             ->assertNotFound();
+    }
+
+    public function test_admin_registration_is_open_for_first_boot_setup(): void
+    {
+        $this
+            ->get('/admin/register')
+            ->assertOk();
     }
 
     public function test_parent_school_uses_section_logo_when_parent_logo_is_empty(): void
