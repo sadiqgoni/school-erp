@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class AssignmentConfirmation extends Model
 {
+    use Concerns\BelongsToSchool;
+
     protected function casts(): array
     {
         return [

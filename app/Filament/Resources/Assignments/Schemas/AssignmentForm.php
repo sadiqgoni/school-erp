@@ -48,11 +48,7 @@ class AssignmentForm
                         Select::make('class_section_id')
                             ->label('Arm (optional)')
                             ->default(fn (): ?int => TeacherWorkspace::lockedFormSectionId())
-                            ->options(fn (Get $get): array => ClassSection::query()
-                                ->where('school_class_id', $get('school_class_id') ?: 0)
-                                ->orderBy('name')
-                                ->pluck('name', 'id')
-                                ->all())
+                            ->options(fn (Get $get): array => self::sectionOptions((int) ($get('school_class_id') ?: 0)))
                             ->placeholder('Whole class')
                             ->searchable()
                             ->disabled(fn (): bool => TeacherWorkspace::shouldLockToFormAssignment())
@@ -108,6 +104,21 @@ class AssignmentForm
 
         if (TeacherWorkspace::isTeacher()) {
             $query->whereKey(TeacherWorkspace::teachableClassIds() ?: [0]);
+        }
+
+        return $query->pluck('name', 'id')->all();
+    }
+
+    protected static function sectionOptions(int $classId): array
+    {
+        $query = ClassSection::query()->where('school_class_id', $classId)->orderBy('name');
+
+        if (TeacherWorkspace::isTeacher()) {
+            $allowedSectionIds = TeacherWorkspace::teachableSectionIds($classId);
+
+            if ($allowedSectionIds !== null) {
+                $query->whereKey($allowedSectionIds ?: [0]);
+            }
         }
 
         return $query->pluck('name', 'id')->all();

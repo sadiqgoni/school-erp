@@ -104,6 +104,20 @@ class AdminPanelSmokeTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_student_table_searches_name_parts_without_full_name_column(): void
+    {
+        $this->seed();
+
+        $schoolAdmin = User::query()->where('email', 'principal@demo-school.test')->firstOrFail();
+        $tenantSlug = $schoolAdmin->schools()->value('slug');
+
+        $this
+            ->actingAs($schoolAdmin)
+            ->get("/portal/{$tenantSlug}/students?search=Aisha")
+            ->assertOk()
+            ->assertSee('Aisha');
+    }
+
     public function test_superadmin_can_open_any_school_portal_from_admin(): void
     {
         $this->seed();
@@ -237,6 +251,66 @@ class AdminPanelSmokeTest extends TestCase
         $this
             ->get('/admin/register')
             ->assertOk();
+    }
+
+    public function test_school_health_page_groups_divisions_under_one_school(): void
+    {
+        $admin = User::query()->create([
+            'name' => 'Health Admin',
+            'email' => 'health-admin@example.com',
+            'password' => Hash::make('password'),
+            'is_platform_admin' => true,
+            'is_active' => true,
+        ]);
+
+        $school = School::query()->create([
+            'name' => 'Green',
+            'code' => 'GIS',
+            'slug' => 'green',
+            'email' => 'green@example.com',
+            'phone' => '+2348000000016',
+            'address' => 'Green address',
+            'city' => 'Maiduguri',
+            'state' => 'Borno',
+            'country' => 'Nigeria',
+            'is_active' => true,
+        ]);
+
+        foreach ([
+            School::DIVISION_NURSERY => 'Gis-NUR',
+            School::DIVISION_PRIMARY => 'Gis-PRI',
+            School::DIVISION_SECONDARY => 'Gis-SEC',
+        ] as $division => $code) {
+            School::query()->create([
+                'parent_school_id' => $school->getKey(),
+                'division' => $division,
+                'name' => 'Green',
+                'code' => $code,
+                'slug' => str($code)->lower()->toString(),
+                'email' => "{$division}@green.example.com",
+                'phone' => '+2348000000017',
+                'address' => 'Green address',
+                'city' => 'Maiduguri',
+                'state' => 'Borno',
+                'country' => 'Nigeria',
+                'is_active' => true,
+            ]);
+        }
+
+        $response = $this
+            ->actingAs($admin)
+            ->get('/admin/school-health')
+            ->assertOk()
+            ->assertSee('Green')
+            ->assertSee('Nursery Section')
+            ->assertSee('Primary Section')
+            ->assertSee('Secondary Section');
+
+        $content = $response->getContent();
+
+        $this->assertStringNotContainsString('Gis-NUR', $content);
+        $this->assertStringNotContainsString('Gis-PRI', $content);
+        $this->assertStringNotContainsString('Gis-SEC', $content);
     }
 
     public function test_parent_school_uses_section_logo_when_parent_logo_is_empty(): void

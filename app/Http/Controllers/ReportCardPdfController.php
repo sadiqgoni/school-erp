@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CompiledResult;
 use App\Models\ReportCard;
 use App\Models\StudentScore;
+use App\Support\ResultAccessPolicy;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -15,6 +16,9 @@ class ReportCardPdfController extends Controller
     public function __invoke(Request $request, ReportCard $reportCard)
     {
         $user = $request->user();
+        $isParentViewer = (bool) $user
+            && ! $user->isSuperAdmin()
+            && $user->hasSchoolRole($reportCard->school_id, 'parent');
 
         abort_unless(
             $user && (
@@ -23,15 +27,24 @@ class ReportCardPdfController extends Controller
                     $user->schools()->whereKey($reportCard->school_id)->exists()
                     && (
                         ! $user->hasSchoolRole($reportCard->school_id, 'parent')
-                        || $user->guardians()
-                            ->where('school_id', $reportCard->school_id)
-                            ->whereHas('studentLinks', fn ($query) => $query->where('student_id', $reportCard->student_id))
-                            ->exists()
+                        || (
+                            $reportCard->status === 'published'
+                            && $user->guardians()
+                                ->where('school_id', $reportCard->school_id)
+                                ->whereHas('studentLinks', fn ($query) => $query->where('student_id', $reportCard->student_id))
+                                ->exists()
+                        )
                     )
                 )
             ),
             403,
         );
+
+        if ($isParentViewer && ResultAccessPolicy::isWithheldForDebt($reportCard)) {
+            $balance = number_format(ResultAccessPolicy::outstandingBalance($reportCard), 2);
+
+            abort(403, "This result is on hold because of an outstanding balance of NGN {$balance} for this term. Please clear the balance to view or download it, or contact the school if you have already paid.");
+        }
 
         $reportCard->load([
             'school',

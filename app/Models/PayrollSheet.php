@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['school_id', 'name', 'description', 'is_active'])]
 class PayrollSheet extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

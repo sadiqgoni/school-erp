@@ -5,7 +5,9 @@ namespace App\Filament\Resources\Assignments\Pages;
 use App\Filament\Resources\Assignments\AssignmentResource;
 use App\Filament\Resources\Concerns\RedirectsToIndex;
 use App\Models\AcademicYear;
+use App\Models\Assignment;
 use App\Models\Term;
+use App\Support\OutboundEmail;
 use App\Support\TeacherWorkspace;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
@@ -35,5 +37,12 @@ class CreateAssignment extends CreateRecord
             ->value('id');
 
         return $data;
+    }
+
+    protected function afterCreate(): void
+    {
+        if ($this->record instanceof Assignment) {
+            app(OutboundEmail::class)->queueAssignment($this->record);
+        }
     }
 }

@@ -24,7 +24,7 @@ class EditSchoolProfile extends EditTenantProfile
 
         return (bool) ($user?->is_active && (
             $user->isSuperAdmin()
-            || $user->schools()->withoutGlobalScopes()->whereKey($tenant)->exists()
+            || $user->schools()->withoutGlobalScope('school-panel-current-tenant')->whereKey($tenant)->exists()
         ));
     }
 
@@ -42,7 +42,7 @@ class EditSchoolProfile extends EditTenantProfile
         $parentSchoolId = $this->tenant->parent_school_id ?: $this->tenant->getKey();
 
         $familyQuery = School::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->whereKey($parentSchoolId)
             ->orWhere('parent_school_id', $parentSchoolId);
 

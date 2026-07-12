@@ -21,6 +21,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class TimetableEntry extends Model
 {
+    use Concerns\BelongsToSchool;
+
     public const TYPE_LESSON = 'lesson';
 
     public const TYPE_BREAK = 'break';

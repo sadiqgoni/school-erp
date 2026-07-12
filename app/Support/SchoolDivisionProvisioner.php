@@ -13,7 +13,7 @@ class SchoolDivisionProvisioner
     public static function syncSections(School $school, ?array $divisions = null): Collection
     {
         $rootSchool = $school->parent_school_id
-            ? School::query()->withoutGlobalScopes()->findOrFail($school->parent_school_id)
+            ? School::query()->withoutGlobalScope('school-panel-current-tenant')->findOrFail($school->parent_school_id)
             : $school;
 
         $selectedDivisions = collect($divisions ?: array_keys(School::DIVISIONS))
@@ -31,7 +31,7 @@ class SchoolDivisionProvisioner
         self::attachUsersFromParent($rootSchool, $selectedDivisions);
 
         School::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->where('parent_school_id', $rootSchool->getKey())
             ->whereNotIn('division', $selectedDivisions)
             ->update(['is_active' => false]);

@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PayrollItemType extends Model
 {
     use CalculatesSalaryItemAmount;
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     public const TYPE_ALLOWANCE = 'allowance';

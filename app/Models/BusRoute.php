@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class BusRoute extends Model
 {
+    use Concerns\BelongsToSchool;
+
     protected function casts(): array
     {
         return [

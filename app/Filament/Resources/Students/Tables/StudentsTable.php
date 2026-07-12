@@ -2,14 +2,18 @@
 
 namespace App\Filament\Resources\Students\Tables;
 
+use App\Models\Student;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class StudentsTable
@@ -36,7 +40,7 @@ class StudentsTable
                     ->color('gray'),
                 TextColumn::make('full_name')
                     ->label('Student')
-                    ->searchable()
+                    ->searchable(['first_name', 'middle_name', 'last_name'])
                     ->sortable(['last_name'])
                     ->weight('semibold')
                     ->description(fn ($record): string => collect([
@@ -103,14 +107,18 @@ class StudentsTable
                         'transferred' => 'Transferred',
                         'suspended' => 'Suspended',
                     ]),
+                TrashedFilter::make(),
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn (Student $record): bool => ! $record->trashed()),
+                RestoreAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    RestoreBulkAction::make(),
                 ]),
             ])
             ->defaultSort('last_name')

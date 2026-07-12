@@ -12,16 +12,21 @@
 <div
     class="school-auth-shell"
     x-data="{
-        active: 'school',
+        active: @js($isAdminPanel ? 'admin' : 'school'),
         copy: {
+            admin: 'Platform owners can sign in to manage schools, sections, subscriptions, and system access.',
             school: 'School owners can sign in to manage admissions, billing, classes, and reports.',
-            staff: 'Teachers and staff can sign in to handle class work, scores, attendance, and daily operations.',
+            staff: 'Teachers and staff can sign in to handle their assigned class work, scores, and daily operations.',
             parent: 'Parents can sign in to view children, invoices, payments, and published results.',
         },
         labels: {
+            @if ($isAdminPanel)
+            admin: 'Platform admin',
+            @else
             school: 'School',
             staff: 'Staff',
             parent: 'Parent',
+            @endif
         },
         focusEmail() {
             this.$nextTick(() => document.querySelector('.school-auth-form input[type=email]')?.focus())
@@ -99,7 +104,7 @@
                     <p x-text="copy[active]">{{ $supportText }}</p>
                 </div>
 
-                <div class="school-auth-audience" role="tablist" aria-label="Account type">
+                <div class="school-auth-audience" role="tablist" aria-label="Account type" @if ($isAdminPanel) style="display:none" @endif>
                     <template x-for="(label, key) in labels" :key="key">
                         <button
                             type="button"

@@ -47,7 +47,7 @@ class ListUsers extends ListRecords
         ];
 
         School::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->whereNull('parent_school_id')
             ->with('divisions')
             ->orderBy('name')
@@ -58,7 +58,7 @@ class ListUsers extends ListRecords
                     ->values()
                     ->all();
 
-                $tabs['school_'.$school->getKey()] = Tab::make($school->name . ' · All Sections')
+                $tabs['school_'.$school->getKey()] = Tab::make($school->name.' · All Sections')
                     ->badge(User::query()
                         ->whereHas('schools', fn (Builder $query): Builder => $query->whereIn('schools.id', $schoolIds))
                         ->count())
@@ -72,7 +72,7 @@ class ListUsers extends ListRecords
                     ->each(function (School $divisionSchool) use (&$tabs, $school): void {
                         $label = School::DIVISIONS[$divisionSchool->division] ?? ucfirst((string) $divisionSchool->division);
 
-                        $tabs['school_'.$school->getKey().'_'.$divisionSchool->division] = Tab::make($school->name . ' · ' . $label)
+                        $tabs['school_'.$school->getKey().'_'.$divisionSchool->division] = Tab::make($school->name.' · '.$label)
                             ->badge(
                                 User::query()
                                     ->whereHas('schools', fn (Builder $query): Builder => $query->whereKey($divisionSchool->getKey()))

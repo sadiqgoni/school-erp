@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['school_id', 'school_class_id', 'name', 'code', 'capacity', 'class_teacher_id', 'is_active'])]
 class ClassSection extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

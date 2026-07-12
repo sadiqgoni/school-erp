@@ -24,6 +24,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Assignment extends Model
 {
+    use Concerns\BelongsToSchool;
+
     public const STATUS_DRAFT = 'draft';
 
     public const STATUS_PUBLISHED = 'published';

@@ -127,15 +127,22 @@ class TimetableSampleSetup
             ->where('school_id', $school->getKey())
             ->where('school_class_id', $classId)
             ->where('is_active', true)
-            ->orderByDesc('is_compulsory')
-            ->orderBy('subject_id')
             ->get();
 
-        $subjectPool = self::subjectPool($subjects);
+        $template = self::template();
+        $lessonSlotCount = collect($template)->where('entry_type', TimetableEntry::TYPE_LESSON)->count();
+
+        // Seed includes the section so two arms of the same class shuffle
+        // differently instead of sharing an identical week, but stays
+        // deterministic so re-clicking "load sample data" doesn't scramble
+        // an already-generated timetable into something new each time.
+        $seed = $classId.':'.($sectionId ?? 'all');
+        $subjectPool = self::shuffledSubjectPool($subjects, $lessonSlotCount, $seed);
+
         $subjectIndex = 0;
         $entries = 0;
 
-        foreach (self::template() as $slot) {
+        foreach ($template as $slot) {
             $attributes = [
                 'school_id' => $school->getKey(),
                 'school_class_id' => $classId,
@@ -154,7 +161,7 @@ class TimetableSampleSetup
             ];
 
             if ($slot['entry_type'] === TimetableEntry::TYPE_LESSON) {
-                $subject = $subjectPool[$subjectIndex % max(count($subjectPool), 1)] ?? null;
+                $subject = $subjectPool[$subjectIndex] ?? null;
 
                 $values['subject_id'] = $subject?->subject_id;
                 $values['staff_id'] = $subject?->staff_id;
@@ -171,10 +178,16 @@ class TimetableSampleSetup
     }
 
     /**
+     * Builds a week's worth of subject slots from the class's curriculum,
+     * weighted by weekly_periods, then arranges them so the same subject
+     * doesn't cluster into a run of consecutive periods and — via the seed
+     * — so different arms of the same class don't end up with an identical
+     * week.
+     *
      * @param  Collection<int, ClassSubject>  $subjects
      * @return array<int, ClassSubject>
      */
-    protected static function subjectPool(Collection $subjects): array
+    protected static function shuffledSubjectPool(Collection $subjects, int $slotCount, string $seed): array
     {
         $pool = [];
 
@@ -183,6 +196,53 @@ class TimetableSampleSetup
 
             for ($index = 0; $index < $repeat; $index++) {
                 $pool[] = $subject;
+            }
+        }
+
+        if ($pool === [] || $slotCount === 0) {
+            return [];
+        }
+
+        $shuffled = collect($pool)
+            ->values()
+            ->sortBy(fn (ClassSubject $subject, int $index): int => crc32($seed.'|'.$index.'|'.$subject->getKey()))
+            ->values()
+            ->all();
+
+        $filled = [];
+
+        for ($i = 0; $i < $slotCount; $i++) {
+            $filled[] = $shuffled[$i % count($shuffled)];
+        }
+
+        return self::spreadOutRepeats($filled);
+    }
+
+    /**
+     * Swaps a subject forward whenever it would otherwise sit back-to-back
+     * with itself, so a shuffled week doesn't still show e.g. two Maths
+     * periods in a row by chance.
+     *
+     * @param  array<int, ClassSubject>  $pool
+     * @return array<int, ClassSubject>
+     */
+    protected static function spreadOutRepeats(array $pool): array
+    {
+        $count = count($pool);
+
+        for ($i = 1; $i < $count; $i++) {
+            if ($pool[$i]->subject_id !== $pool[$i - 1]->subject_id) {
+                continue;
+            }
+
+            for ($j = $i + 1; $j < $count; $j++) {
+                if ($pool[$j]->subject_id === $pool[$i - 1]->subject_id) {
+                    continue;
+                }
+
+                [$pool[$i], $pool[$j]] = [$pool[$j], $pool[$i]];
+
+                break;
             }
         }
 

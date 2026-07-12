@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l app/Filament/Resources/Assignments/Schemas/AssignmentForm.php)",
+      "Bash(php -l app/Support/TeacherWorkspace.php)",
+      "Bash(rm -f *)"
+    ],
+    "additionalDirectories": [
+      "/private/tmp"
+    ]
+  }
+}

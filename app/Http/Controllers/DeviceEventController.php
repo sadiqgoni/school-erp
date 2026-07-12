@@ -6,6 +6,7 @@ use App\Models\BusRoute;
 use App\Models\School;
 use App\Models\StudentDevice;
 use App\Models\StudentMovement;
+use App\Support\OutboundEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,7 +33,7 @@ class DeviceEventController extends Controller
         ]);
 
         $school = School::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->where('device_api_token', $data['token'])
             ->first();
 
@@ -73,6 +74,8 @@ class DeviceEventController extends Controller
             'happened_at' => $data['happened_at'] ?? now(),
             'source' => 'device',
         ]);
+
+        app(OutboundEmail::class)->queueStudentMovement($movement);
 
         return response()->json([
             'status' => 'ok',

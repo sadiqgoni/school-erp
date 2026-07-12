@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['school_id', 'academic_year_id', 'term_id', 'name', 'type', 'starts_on', 'ends_on', 'status', 'remarks'])]
 class Exam extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

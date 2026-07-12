@@ -142,6 +142,40 @@ class TeacherWorkspace
             ->all();
     }
 
+    /**
+     * Arm/section ids the teacher may act on within one specific class.
+     * Returns null when there is no arm-level restriction to apply (e.g.
+     * they only reach this class as a subject teacher, who works across
+     * every arm, or their form assignment covers the whole class).
+     *
+     * @return array<int, int>|null
+     */
+    public static function teachableSectionIds(int $classId): ?array
+    {
+        $staff = self::currentStaff();
+
+        if (! $staff) {
+            return [];
+        }
+
+        $formSections = TeachingAssignment::query()
+            ->where('school_id', $staff->school_id)
+            ->where('staff_id', $staff->getKey())
+            ->where('school_class_id', $classId)
+            ->whereIn('assignment_role', [
+                TeachingAssignment::ROLE_FORM_TEACHER,
+                TeachingAssignment::ROLE_ASSISTANT_FORM_TEACHER,
+            ])
+            ->where('is_active', true)
+            ->pluck('class_section_id');
+
+        if ($formSections->isEmpty() || $formSections->contains(null)) {
+            return null;
+        }
+
+        return $formSections->unique()->values()->all();
+    }
+
     public static function subjectAssignments(): Collection
     {
         $staff = self::currentStaff();

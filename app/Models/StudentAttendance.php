@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class StudentAttendance extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

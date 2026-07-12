@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
     'school_id',
@@ -33,7 +34,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Student extends Model
 {
-    use HasFactory;
+    use Concerns\BelongsToSchool;
+    use HasFactory, SoftDeletes;
 
     protected function casts(): array
     {
@@ -80,5 +82,21 @@ class Student extends Model
             $this->middle_name,
             $this->last_name,
         ])->filter()->join(' '));
+    }
+
+    public function currentClassLabel(): ?string
+    {
+        $placement = $this->enrollments
+            ->sortByDesc(fn (Enrollment $enrollment): string => (string) ($enrollment->enrolled_on ?? $enrollment->created_at ?? ''))
+            ->first();
+
+        if (! $placement) {
+            return null;
+        }
+
+        return collect([
+            $placement->schoolClass?->name,
+            $placement->classSection?->name,
+        ])->filter()->join(' ');
     }
 }

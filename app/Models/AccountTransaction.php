@@ -7,17 +7,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['school_id', 'ledger_account_id', 'bank_account_id', 'transactionable_type', 'transactionable_id', 'transaction_number', 'transaction_date', 'direction', 'amount', 'description', 'reference', 'status', 'created_by_id', 'notes'])]
 class AccountTransaction extends Model
 {
-    use HasFactory;
+    use Concerns\BelongsToSchool;
+    use HasFactory, SoftDeletes;
 
     protected static function booted(): void
     {
         static::creating(function (AccountTransaction $transaction): void {
             if (blank($transaction->transaction_number)) {
-                $transaction->transaction_number = 'TXN-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->count() + 1), 5, '0', STR_PAD_LEFT);
+                $transaction->transaction_number = 'TXN-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->withoutGlobalScopes()->where('school_id', $transaction->school_id)->count() + 1), 5, '0', STR_PAD_LEFT);
             }
         });
     }

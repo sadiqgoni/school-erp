@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Notices\Pages;
 use App\Filament\Resources\Concerns\RedirectsToIndex;
 use App\Filament\Resources\Notices\NoticeResource;
 use App\Models\Notice;
+use App\Support\OutboundEmail;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -28,5 +29,10 @@ class CreateNotice extends CreateRecord
     protected function getCreatedNotificationTitle(): ?string
     {
         return 'Notice saved — parents in the selected audience can now see it.';
+    }
+
+    protected function afterCreate(): void
+    {
+        app(OutboundEmail::class)->queueNotice($this->record);
     }
 }

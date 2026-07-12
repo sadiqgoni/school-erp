@@ -1,3 +1,4 @@
+@php($isFirstBoot = ! \App\Models\User::query()->exists())
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -322,15 +323,17 @@
                     <div>
                         <p class="access-label">Sign in</p>
                         <h2>Open your portal</h2>
-                        <p>Use the account details provided for your school.</p>
+                        <p>{{ $isFirstBoot ? 'Create the first protected platform administrator account.' : 'Use the account details provided for your school.' }}</p>
 
-                        <a href="{{ url('/portal/login') }}" class="portal-button">Continue</a>
+                        <a href="{{ $isFirstBoot ? url('/admin/register') : url('/portal/login') }}" class="portal-button">
+                            {{ $isFirstBoot ? 'Set up School Dice' : 'Continue' }}
+                        </a>
 
                         <div class="access-note">
                             <strong>Before you continue</strong>
                             <ol>
                                 <li>Enter your Email address* and password exactly as provided.</li>
-                                <li>Use the school code and password shared by your admin.</li>
+                                <li>Use the email address and password shared by your admin.</li>
                                 <li>Contact your school office if you cannot access your portal.</li>
                             </ol>
                         </div>

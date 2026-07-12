@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\ParentReportCards\Tables;
 
 use App\Models\ReportCard;
+use App\Models\Student;
+use App\Support\ResultAccessPolicy;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
@@ -54,6 +56,16 @@ class ParentReportCardsTable
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => str($state)->replace('_', ' ')->title()),
+                TextColumn::make('fee_status')
+                    ->label('Fees')
+                    ->state(fn (ReportCard $record): ?string => match (true) {
+                        ! $record->school?->withhold_results_for_debtors => null,
+                        ResultAccessPolicy::isWithheldForDebt($record) => 'On hold',
+                        default => 'Cleared',
+                    })
+                    ->placeholder('—')
+                    ->badge()
+                    ->color(fn (?string $state): string => $state === 'On hold' ? 'danger' : 'success'),
             ])
             ->filters([
                 SelectFilter::make('student_id')
@@ -74,8 +86,15 @@ class ParentReportCardsTable
             ])
             ->recordActions([
                 Action::make('downloadPdf')
-                    ->label('PDF')
-                    ->icon('heroicon-o-document-arrow-down')
+                    ->label(fn (ReportCard $record): string => ResultAccessPolicy::isWithheldForDebt($record) ? 'On hold' : 'PDF')
+                    ->icon(fn (ReportCard $record): string => ResultAccessPolicy::isWithheldForDebt($record)
+                        ? 'heroicon-o-lock-closed'
+                        : 'heroicon-o-document-arrow-down')
+                    ->color(fn (ReportCard $record): string => ResultAccessPolicy::isWithheldForDebt($record) ? 'danger' : 'primary')
+                    ->disabled(fn (ReportCard $record): bool => ResultAccessPolicy::isWithheldForDebt($record))
+                    ->tooltip(fn (ReportCard $record): ?string => ResultAccessPolicy::isWithheldForDebt($record)
+                        ? 'Clear the outstanding balance of NGN '.number_format(ResultAccessPolicy::outstandingBalance($record), 2).' for this term to unlock the result.'
+                        : null)
                     ->url(fn (ReportCard $record): string => route('report-cards.pdf', $record))
                     ->openUrlInNewTab(),
             ])
@@ -91,7 +110,7 @@ class ParentReportCardsTable
         $tenant = Filament::getTenant();
 
         return $query
-            ->with(['student.enrollments.schoolClass', 'student.enrollments.classSection', 'exam', 'academicYear', 'term'])
+            ->with(['student.enrollments.schoolClass', 'student.enrollments.classSection', 'exam', 'academicYear', 'term', 'school'])
             ->where('school_id', $tenant?->getKey())
             ->where('status', 'published')
             ->whereHas('student.guardianLinks.guardian', fn (Builder $query) => $query->where('user_id', $userId));
@@ -102,7 +121,7 @@ class ParentReportCardsTable
         $userId = Filament::auth()->id();
         $tenant = Filament::getTenant();
 
-        return \App\Models\Student::query()
+        return Student::query()
             ->where('school_id', $tenant?->getKey())
             ->whereHas('guardianLinks.guardian', fn (Builder $query) => $query->where('user_id', $userId))
             ->orderBy('first_name')

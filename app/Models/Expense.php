@@ -10,13 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'expense_category_id', 'expense_number', 'expense_date', 'payee', 'description', 'amount', 'payment_method', 'bank_account_id', 'asset_account_id', 'expense_account_id', 'reference', 'recorded_by_id', 'status', 'notes'])]
 class Expense extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void
     {
         static::creating(function (Expense $expense): void {
             if (blank($expense->expense_number)) {
-                $expense->expense_number = 'EXP-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->count() + 1), 4, '0', STR_PAD_LEFT);
+                $expense->expense_number = 'EXP-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->withoutGlobalScopes()->where('school_id', $expense->school_id)->count() + 1), 4, '0', STR_PAD_LEFT);
             }
         });
 

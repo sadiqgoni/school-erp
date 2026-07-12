@@ -29,17 +29,17 @@ class UserResource extends Resource
 
     protected static ?string $tenantRelationshipName = 'users';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'System';
+    protected static string|\UnitEnum|null $navigationGroup = 'People & Access';
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 10;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function getNavigationLabel(): string
     {
-        return Filament::getCurrentPanel()?->getId() === 'school' ? 'Users & Access' : 'Users';
+        return Filament::getCurrentPanel()?->getId() === 'school' ? 'Users & Access' : 'Users & Roles';
     }
 
     public static function form(Schema $schema): Schema

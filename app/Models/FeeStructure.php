@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'academic_year_id', 'term_id', 'school_class_id', 'fee_type_id', 'amount', 'due_date', 'is_active'])]
 class FeeStructure extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

@@ -41,14 +41,10 @@
                                     <td style="padding:16px 18px;border-bottom:1px solid #e2e8f0;font-weight:700">{{ $email }}</td>
                                 </tr>
                                 <tr>
-                                    <td style="padding:16px 18px;color:#475569">Temporary password</td>
+                                    <td style="padding:16px 18px;color:#475569">Password</td>
                                     <td style="padding:16px 18px;font-weight:700">{{ $temporaryPassword }}</td>
                                 </tr>
                             </table>
-
-                            <p style="margin:0 0 22px">
-                                Please change the temporary password after the first sign in.
-                            </p>
 
                             <p style="margin:0 0 26px">
                                 <a href="{{ $portalUrl }}" style="display:inline-block;background:#0f766e;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 18px;border-radius:7px">Open school portal</a>

@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class StudentDevice extends Model
 {
+    use Concerns\BelongsToSchool;
+
     public const TYPES = [
         'nfc_card' => 'NFC Card',
         'smart_watch' => 'Smart Watch',

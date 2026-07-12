@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\StudentDiscounts\Pages;
 
 use App\Filament\Resources\StudentDiscounts\StudentDiscountResource;
+use App\Filament\Support\ClassTabs;
+use App\Models\StudentDiscount;
 use App\Support\FinanceSampleSetup;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -42,5 +44,10 @@ class ListStudentDiscounts extends ListRecords
                 }),
             CreateAction::make(),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::directOrStudentEnrollment(StudentDiscount::class, 'All discounts');
     }
 }

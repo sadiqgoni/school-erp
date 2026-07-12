@@ -26,13 +26,13 @@ class SchoolResource extends Resource
 {
     protected static ?string $model = School::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
-    protected static ?string $navigationLabel = 'Schools';
+    protected static ?string $navigationLabel = 'Schools & Portals';
 
     protected static ?string $modelLabel = 'School';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'System';
+    protected static string|\UnitEnum|null $navigationGroup = 'Platform';
 
     protected static ?int $navigationSort = 10;
 

@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Enrollment;
 use App\Models\Expense;
 use App\Models\FeePayment;
 use App\Models\ReportCard;
@@ -10,7 +9,6 @@ use App\Models\School;
 use App\Models\Staff;
 use App\Models\Student;
 use App\Models\StudentInvoice;
-use App\Models\StudentScore;
 use App\Models\User;
 use App\Observers\AuditModelObserver;
 use App\Support\AuditLogger;
@@ -56,12 +54,18 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
+     * Kept deliberately short. Enrollment and StudentScore are excluded on
+     * purpose — a single bulk action (class placement for a whole cohort,
+     * or a teacher entering scores for one class) can generate hundreds of
+     * rows for very little forensic value. What's left here is the stuff
+     * that actually matters for trust and dispute resolution: identity,
+     * money, and published results.
+     *
      * @return array<int, class-string>
      */
     protected function auditedModels(): array
     {
         return [
-            Enrollment::class,
             Expense::class,
             FeePayment::class,
             ReportCard::class,
@@ -69,7 +73,6 @@ class AppServiceProvider extends ServiceProvider
             Staff::class,
             Student::class,
             StudentInvoice::class,
-            StudentScore::class,
             User::class,
         ];
     }

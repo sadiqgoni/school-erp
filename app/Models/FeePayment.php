@@ -6,17 +6,19 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['school_id', 'student_invoice_id', 'student_id', 'receipt_number', 'payer', 'payment_date', 'amount', 'payment_method', 'payment_provider', 'provider_transaction_id', 'provider_payload', 'bank_account_id', 'asset_account_id', 'income_account_id', 'reference', 'received_by_id', 'status', 'acknowledged_at', 'acknowledged_by_id', 'notes'])]
 class FeePayment extends Model
 {
-    use HasFactory;
+    use Concerns\BelongsToSchool;
+    use HasFactory, SoftDeletes;
 
     protected static function booted(): void
     {
         static::creating(function (FeePayment $payment): void {
             if (blank($payment->receipt_number)) {
-                $payment->receipt_number = 'RCP-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->count() + 1), 4, '0', STR_PAD_LEFT);
+                $payment->receipt_number = 'RCP-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->withoutGlobalScopes()->where('school_id', $payment->school_id)->count() + 1), 4, '0', STR_PAD_LEFT);
             }
         });
 

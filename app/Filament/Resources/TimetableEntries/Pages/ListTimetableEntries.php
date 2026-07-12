@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\TimetableEntries\Pages;
 
 use App\Filament\Resources\TimetableEntries\TimetableEntryResource;
+use App\Filament\Support\ClassTabs;
+use App\Models\TimetableEntry;
 use App\Support\TeacherWorkspace;
 use App\Support\TimetableSampleSetup;
 use Filament\Actions\Action;
@@ -51,5 +53,10 @@ class ListTimetableEntries extends ListRecords
                 ->label('Add period')
                 ->icon('heroicon-o-plus'),
         ];
+    }
+
+    public function getTabs(): array
+    {
+        return ClassTabs::direct(TimetableEntry::class, 'All periods');
     }
 }

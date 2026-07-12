@@ -29,6 +29,7 @@ use Illuminate\Support\Str;
 ])]
 class SalaryTemplate extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void

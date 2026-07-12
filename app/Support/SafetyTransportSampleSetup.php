@@ -10,7 +10,6 @@ use App\Models\StudentDevice;
 use App\Models\StudentMovement;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class SafetyTransportSampleSetup
 {
@@ -242,22 +241,22 @@ class SafetyTransportSampleSetup
         return match ($school->division) {
             School::DIVISION_NURSERY => [
                 [
-                    'name' => 'Morning Nest Route',
+                    'name' => 'Tarauni Nursery Route',
                     'code' => "{$section}-BUS-1",
                     'vehicle_name' => 'Toyota Hiace Nursery Shuttle',
-                    'plate_number' => 'ABC-241NT',
-                    'driver_name' => 'Musa Danjuma',
+                    'plate_number' => 'KNK-241NT',
+                    'driver_name' => 'Musa Abdullahi',
                     'driver_phone' => '+2348032001101',
-                    'assistant_name' => 'Aunty Bisi',
+                    'assistant_name' => 'Aunty Aisha',
                     'assistant_phone' => '+2348032001102',
                     'capacity' => 18,
                 ],
                 [
-                    'name' => 'Little Steps Route',
+                    'name' => 'Nassarawa Nursery Route',
                     'code' => "{$section}-BUS-2",
                     'vehicle_name' => 'Coaster Early Years Bus',
-                    'plate_number' => 'ABC-242NT',
-                    'driver_name' => 'Tunde Ojo',
+                    'plate_number' => 'KNK-242NT',
+                    'driver_name' => 'Baba Kabiru',
                     'driver_phone' => '+2348032001103',
                     'assistant_name' => 'Aunty Hauwa',
                     'assistant_phone' => '+2348032001104',
@@ -266,24 +265,24 @@ class SafetyTransportSampleSetup
             ],
             default => [
                 [
-                    'name' => 'City Centre Route',
+                    'name' => 'Zoo Road Route',
                     'code' => "{$section}-BUS-1",
                     'vehicle_name' => 'Toyota Hiace School Shuttle',
-                    'plate_number' => 'ABC-341SD',
-                    'driver_name' => 'Ibrahim Sule',
+                    'plate_number' => 'KNK-341SD',
+                    'driver_name' => 'Ibrahim Garba',
                     'driver_phone' => '+2348032002101',
-                    'assistant_name' => 'Grace Obi',
+                    'assistant_name' => 'Hauwa Umar',
                     'assistant_phone' => '+2348032002102',
                     'capacity' => 24,
                 ],
                 [
-                    'name' => 'Estate Route',
+                    'name' => 'Bompai Route',
                     'code' => "{$section}-BUS-2",
                     'vehicle_name' => 'Coaster School Bus',
-                    'plate_number' => 'ABC-342SD',
+                    'plate_number' => 'KNK-342SD',
                     'driver_name' => 'Sani Haruna',
                     'driver_phone' => '+2348032002103',
-                    'assistant_name' => 'Mary James',
+                    'assistant_name' => 'Zainab Bello',
                     'assistant_phone' => '+2348032002104',
                     'capacity' => 30,
                 ],
@@ -298,18 +297,18 @@ class SafetyTransportSampleSetup
     {
         return match ($school->division) {
             School::DIVISION_NURSERY => [
-                'Main Gate Estate',
-                'GRA Junction',
-                'Teachers Village',
-                'Market Square Stop',
-                'Custom Bridge',
+                'Tarauni Market Junction, Kano',
+                'Zoo Road by Gidan Zoo, Kano',
+                'Gadon Kaya Bus Stop, Kano',
+                'Nassarawa GRA Gate, Kano',
+                'Hotoro Eastern Bypass, Kano',
             ],
             default => [
-                'Central Mosque Stop',
-                'Post Office Junction',
-                'Government Quarters',
-                'Unity Estate Gate',
-                'Old Market Roundabout',
+                'Bompai Police Headquarters Junction, Kano',
+                'Rijiyar Zaki Main Road, Kano',
+                'Kofar Ruwa Market Roundabout, Kano',
+                'Sabon Gari by France Road, Kano',
+                'Sharada Phase 1 Gate, Kano',
             ],
         };
     }

@@ -82,7 +82,7 @@ class SchoolForm
                             $rootSchoolId = $record->parent_school_id ?: $record->getKey();
 
                             $sections = School::query()
-                                ->withoutGlobalScopes()
+                                ->withoutGlobalScope('school-panel-current-tenant')
                                 ->where('parent_school_id', $rootSchoolId)
                                 ->where('is_active', true)
                                 ->pluck('division')
@@ -120,6 +120,15 @@ class SchoolForm
                         ->inline(false),
                 ])
                 ->columns(2),
+            Section::make('Fee policy')
+                ->schema([
+                    Toggle::make('withhold_results_for_debtors')
+                        ->label('Withhold a term\'s result until that term\'s fees are cleared')
+                        ->helperText('When on, a parent cannot view or download a published report card for a term while there is an outstanding balance for that same term. Staff and admins can always see it. Off by default.')
+                        ->default(false)
+                        ->inline(false),
+                ])
+                ->columns(1),
             Section::make('Enabled modules')
                 ->description('Choose the areas this school should see in its portal first.')
                 ->schema([

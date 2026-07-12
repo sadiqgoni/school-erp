@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'student_id', 'school_class_id', 'academic_year_id', 'term_id', 'name', 'type', 'value', 'starts_on', 'ends_on', 'is_active', 'notes'])]
 class StudentDiscount extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

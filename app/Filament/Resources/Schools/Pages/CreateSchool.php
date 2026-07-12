@@ -40,6 +40,7 @@ class CreateSchool extends CreateRecord
                 'password' => Hash::make($adminPassword),
                 'is_platform_admin' => false,
                 'is_active' => true,
+                'must_change_password' => true,
             ]);
 
             $divisionSchools = SchoolDivisionProvisioner::provision($school, $sections);

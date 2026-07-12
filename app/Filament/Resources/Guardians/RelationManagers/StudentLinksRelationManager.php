@@ -11,7 +11,6 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -70,6 +69,15 @@ class StudentLinksRelationManager extends RelationManager
                     ->label('Student')
                     ->searchable()
                     ->description(fn ($record): ?string => $record->student?->admission_number),
+                TextColumn::make('class')
+                    ->label('Class')
+                    ->state(function ($record): string {
+                        $record->loadMissing('student.enrollments.schoolClass', 'student.enrollments.classSection');
+
+                        return $record->student?->currentClassLabel() ?: 'No class';
+                    })
+                    ->badge()
+                    ->color('info'),
                 TextColumn::make('relationship')
                     ->badge(),
                 IconColumn::make('is_primary_contact')
@@ -80,11 +88,11 @@ class StudentLinksRelationManager extends RelationManager
                     ->label('SMS'),
             ])
             ->headerActions([
-              CreateAction::make(),
+                CreateAction::make(),
             ])
             ->recordActions([
-            EditAction::make(),
-           DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ]);
     }
 }

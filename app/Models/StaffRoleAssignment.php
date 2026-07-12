@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'staff_id', 'staff_role_id', 'assigned_on', 'is_primary', 'is_active'])]
 class StaffRoleAssignment extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

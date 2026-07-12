@@ -16,6 +16,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class BusRouteStudent extends Model
 {
+    use Concerns\BelongsToSchool;
+
     protected function casts(): array
     {
         return [

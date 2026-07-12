@@ -152,3 +152,60 @@ artisan
 ```
 
 Then run the post-deploy commands above.
+
+## Cron and Queue (currently not required, but read this before adding one)
+
+As of this writing, nothing in the app implements `ShouldQueue` — mail (e.g. the school-admin
+welcome email) sends synchronously on the request, and `routes/console.php` has no scheduled
+tasks beyond the default Artisan `inspire` command. **A cron job is not required for the app to
+work today.**
+
+If a future feature queues a job or notification (`->onQueue()`, `implements ShouldQueue`, a
+scheduled command in `routes/console.php`), two things become mandatory or that work will queue
+up and silently never run:
+
+1. A queue worker process. On shared cPanel hosting without shell/supervisor access, the
+   practical option is a cron entry every minute running
+   `php artisan queue:work --stop-when-empty --max-time=55`, which processes whatever is
+   queued and exits before the next minute's cron fires it again.
+2. If `routes/console.php` gains scheduled commands, a single cron entry is also needed for
+   Laravel's scheduler:
+   `* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1`
+
+Set `QUEUE_CONNECTION=database` (already the default in `.env`) so queued jobs persist in the
+`jobs` table between cron runs rather than requiring a long-running process.
+
+## Moving session/cache/queue to Redis (do this once volume justifies it)
+
+The `database` driver for sessions, cache, and queue (current default) is fine for a handful of
+schools. Once dozens-to-hundreds of schools are active concurrently, every page load hitting the
+`sessions`/`cache`/`jobs` tables on the same MySQL server as everything else becomes real
+contention. Redis removes that load from MySQL entirely and is a pure config change — no code
+changes needed, Laravel's `config/session.php`, `config/cache.php`, and `config/queue.php`
+already support the `redis` driver out of the box, and `config/database.php` already has a
+`redis` connection block reading `REDIS_HOST`/`REDIS_PORT`/`REDIS_PASSWORD` from `.env`.
+
+**Before flipping this in production**, confirm the host actually provides Redis — this matters
+because shared cPanel hosting frequently does *not* include it unless the plan is a VPS or the
+reseller enabled a CloudLinux "Redis Selector" / WHM Redis add-on. Check with the host, or run
+`redis-cli ping` on the server — if that returns `PONG`, it's available.
+
+**The switch itself**, once a Redis instance is reachable from the app server:
+
+1. Set in `.env`: `SESSION_DRIVER=redis`, `CACHE_STORE=redis`, `QUEUE_CONNECTION=redis`.
+2. Fill in `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD` for that instance (`.env` already has
+   placeholders for these).
+3. Run `php artisan config:clear` (or `config:cache` in production) so the new driver takes
+   effect immediately.
+4. If a `QUEUE_CONNECTION=database` queue worker cron was already running, switch it to a
+   long-running `php artisan queue:work` process (Redis queues are meant to be consumed by a
+   persistent worker, not a `--stop-when-empty` cron poll) — this needs Supervisor or an
+   equivalent process manager, which usually means a VPS rather than shared cPanel hosting.
+5. Sanity-check: log in (confirms session), reload a page twice (confirms cache), and trigger
+   any queued action if one exists (confirms queue) before considering the switch done.
+
+Local development note: this was intentionally **not** flipped in this repo's own `.env` — doing
+so requires a running Redis server, and there is no Redis server installed on this machine as of
+this writing (no Homebrew/Docker install was performed here at the developer's request). The
+config wiring above has been verified by reading Laravel's config files, not by running a live
+Redis instance, so treat step 5 above as required before trusting this in production.

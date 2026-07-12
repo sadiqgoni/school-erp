@@ -10,13 +10,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'from_account_id', 'to_account_id', 'transfer_number', 'transfer_date', 'amount', 'reference', 'status', 'created_by_id', 'notes'])]
 class AccountTransfer extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void
     {
         static::creating(function (AccountTransfer $transfer): void {
             if (blank($transfer->transfer_number)) {
-                $transfer->transfer_number = 'TRF-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->count() + 1), 5, '0', STR_PAD_LEFT);
+                $transfer->transfer_number = 'TRF-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->withoutGlobalScopes()->where('school_id', $transfer->school_id)->count() + 1), 5, '0', STR_PAD_LEFT);
             }
         });
 

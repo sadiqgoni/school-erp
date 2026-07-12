@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 #[Fillable(['school_id', 'name', 'code', 'description', 'is_required', 'is_active'])]
 class FeeType extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void

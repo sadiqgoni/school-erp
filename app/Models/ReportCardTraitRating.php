@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'report_card_id', 'result_trait_item_id', 'rating', 'remarks'])]
 class ReportCardTraitRating extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     public function school(): BelongsTo

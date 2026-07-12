@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['school_id', 'academic_year_id', 'name', 'position', 'starts_on', 'ends_on', 'is_current', 'is_active'])]
 class Term extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\RequestPasswordReset;
 use App\Filament\Pages\Auth\SplitLogin;
 use App\Filament\Widgets\FinanceSnapshot;
 use App\Filament\Widgets\ParentDashboardSummary;
@@ -9,6 +10,7 @@ use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
 use App\Filament\Widgets\TeacherDashboard;
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\EnsureSchoolAvailable;
 use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -39,6 +41,7 @@ class SchoolPanelProvider extends PanelProvider
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
             ->brandLogoHeight('75px')
             ->login(SplitLogin::class)
+            ->passwordReset(RequestPasswordReset::class)
             ->spa()
             ->colors([
                 'primary' => Color::Teal,
@@ -101,6 +104,12 @@ class SchoolPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 EnsureActiveUser::class,
-            ]);
+            ])
+            // Filament resolves Filament::getTenant() inside its own IdentifyTenant
+            // middleware, which runs as part of the tenant-middleware group — after
+            // authMiddleware. Tenant-dependent checks must live here, not above.
+            ->tenantMiddleware([
+                EnsureSchoolAvailable::class,
+            ], isPersistent: true);
     }
 }

@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -23,6 +25,22 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 ])]
 class UserActivity extends Model
 {
+    use Concerns\BelongsToSchool;
+    use Prunable;
+
+    /**
+     * How long an activity row is kept before `php artisan model:prune`
+     * removes it. The audit trail is for recent trust/dispute questions,
+     * not permanent archival — without this the table grows forever
+     * across every school and eventually dominates the database.
+     */
+    public const RETENTION_DAYS = 90;
+
+    public function prunable(): Builder
+    {
+        return static::query()->where('created_at', '<', now()->subDays(self::RETENTION_DAYS));
+    }
+
     protected function casts(): array
     {
         return [

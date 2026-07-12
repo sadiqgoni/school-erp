@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Mail\CommunicationLogMail;
 use App\Models\CommunicationLog;
 use App\Models\FeePayment;
 use App\Models\Reminder;
 use App\Models\StudentInvoice;
 use App\Support\PaymentCommunicationCoordinator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class PaymentCommunicationCoordinatorTest extends TestCase
@@ -40,11 +42,11 @@ class PaymentCommunicationCoordinatorTest extends TestCase
             'event_type' => 'fee_invoice_created',
             'channel' => 'email',
             'recipient_contact' => 'guardian@example.com',
-            'status' => 'queued',
+            'status' => 'sent',
         ]);
     }
 
-    public function test_it_schedules_due_reminders_for_primary_guardian_sms_contacts(): void
+    public function test_it_schedules_due_reminders_for_primary_guardian_sms_and_email_contacts(): void
     {
         $this->seed();
 
@@ -55,13 +57,21 @@ class PaymentCommunicationCoordinatorTest extends TestCase
         $reminders = app(PaymentCommunicationCoordinator::class)
             ->scheduleInvoiceDueReminders($invoice);
 
-        $this->assertCount(1, $reminders);
+        $this->assertCount(2, $reminders);
         $this->assertDatabaseHas(Reminder::class, [
             'school_id' => $invoice->school_id,
             'student_invoice_id' => $invoice->getKey(),
             'type' => 'fee_due',
             'channel' => 'sms',
             'recipient_contact' => '+2348011111111',
+            'status' => 'pending',
+        ]);
+        $this->assertDatabaseHas(Reminder::class, [
+            'school_id' => $invoice->school_id,
+            'student_invoice_id' => $invoice->getKey(),
+            'type' => 'fee_due',
+            'channel' => 'email',
+            'recipient_contact' => 'guardian@example.com',
             'status' => 'pending',
         ]);
     }
@@ -92,7 +102,29 @@ class PaymentCommunicationCoordinatorTest extends TestCase
             'event_type' => 'fee_payment_received',
             'channel' => 'email',
             'recipient_contact' => 'guardian@example.com',
-            'status' => 'queued',
+            'status' => 'sent',
+        ]);
+    }
+
+    public function test_it_sends_invoice_email_communication_logs_immediately(): void
+    {
+        Mail::fake();
+        $this->seed();
+
+        $invoice = StudentInvoice::query()
+            ->where('invoice_number', 'INV-2026-0001')
+            ->firstOrFail();
+
+        app(PaymentCommunicationCoordinator::class)
+            ->queueInvoiceReminder($invoice);
+
+        Mail::assertSent(CommunicationLogMail::class, 1);
+        $this->assertDatabaseHas(CommunicationLog::class, [
+            'school_id' => $invoice->school_id,
+            'student_id' => $invoice->student_id,
+            'channel' => 'email',
+            'recipient_contact' => 'guardian@example.com',
+            'status' => 'sent',
         ]);
     }
 }

@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class StudentMovement extends Model
 {
+    use Concerns\BelongsToSchool;
+
     public const EVENT_CHECK_IN = 'check_in';
 
     public const EVENT_CHECK_OUT = 'check_out';

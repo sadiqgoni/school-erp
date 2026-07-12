@@ -8,9 +8,9 @@ use App\Models\ClassSubject;
 use App\Models\Department;
 use App\Models\PayrollItemType;
 use App\Models\PayrollSheet;
+use App\Models\SalaryTemplate;
 use App\Models\School;
 use App\Models\SchoolClass;
-use App\Models\SalaryTemplate;
 use App\Models\Staff;
 use App\Models\StaffBank;
 use App\Models\StaffRole;
@@ -18,7 +18,6 @@ use App\Models\StaffRoleAssignment;
 use App\Models\Subject;
 use App\Models\TeachingAssignment;
 use App\Models\Term;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -330,19 +329,19 @@ class StaffSampleSetup
                 });
             })
             ->map(fn (array $template): SalaryTemplate => SalaryTemplate::query()->updateOrCreate(
-            ['school_id' => $school->getKey(), 'code' => $template['code']],
-            $template + [
-                'housing_allowance' => 0,
-                'transport_allowance' => 0,
-                'meal_allowance' => 0,
-                'other_allowance' => 0,
-                'pension_deduction' => 0,
-                'tax_deduction' => 0,
-                'other_deduction' => 0,
-                'is_active' => true,
-                'notes' => 'Sample salary scale for testing.',
-            ],
-        ))->sortBy('monthly_basic')->values();
+                ['school_id' => $school->getKey(), 'code' => $template['code']],
+                $template + [
+                    'housing_allowance' => 0,
+                    'transport_allowance' => 0,
+                    'meal_allowance' => 0,
+                    'other_allowance' => 0,
+                    'pension_deduction' => 0,
+                    'tax_deduction' => 0,
+                    'other_deduction' => 0,
+                    'is_active' => true,
+                    'notes' => 'Sample salary scale for testing.',
+                ],
+            ))->sortBy('monthly_basic')->values();
     }
 
     protected static function ensureSalaryItems(School $school): void
@@ -369,21 +368,21 @@ class StaffSampleSetup
             'nursery' => [
                 ['first_name' => 'Amina', 'middle_name' => 'Rahma', 'last_name' => 'Bello', 'gender' => 'female', 'role_code' => 'HEAD-NURSERY', 'department_code' => 'NURSERY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Head of Nursery', 'qualification' => 'nce', 'specialization' => 'Early Childhood Education', 'email' => 'head.nursery.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200013', 'salary_scale_code' => 'GL07-S04'],
                 ['first_name' => 'Maryam', 'middle_name' => null, 'last_name' => 'Lawal', 'gender' => 'female', 'role_code' => 'NURSERY-TEACHER', 'department_code' => 'NURSERY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Nursery Teacher', 'qualification' => 'nce', 'specialization' => 'Early Childhood Education', 'email' => 'maryam.lawal.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200014', 'salary_scale_code' => 'GL05-S04'],
-                ['first_name' => 'Grace', 'middle_name' => 'Ada', 'last_name' => 'Okafor', 'gender' => 'female', 'role_code' => 'ASSISTANT-TEACHER', 'department_code' => 'NURSERY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Assistant Teacher', 'qualification' => 'nce', 'specialization' => 'Child Care', 'email' => 'grace.okafor.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL03-S06'],
+                ['first_name' => 'Comfort', 'middle_name' => 'Bot', 'last_name' => 'Gyang', 'gender' => 'female', 'role_code' => 'ASSISTANT-TEACHER', 'department_code' => 'NURSERY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Assistant Teacher', 'qualification' => 'nce', 'specialization' => 'Child Care', 'email' => 'comfort.gyang.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL03-S06'],
             ],
             'primary' => [
                 ['first_name' => 'Samuel', 'middle_name' => 'Tersoo', 'last_name' => 'Audu', 'gender' => 'male', 'role_code' => 'HEAD-TEACHER', 'department_code' => 'PRIMARY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Head Teacher', 'qualification' => 'b_ed', 'specialization' => 'Primary Education', 'email' => 'head.primary.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200013', 'salary_scale_code' => 'GL07-S08'],
                 ['first_name' => 'Zainab', 'middle_name' => 'Musa', 'last_name' => 'Yusuf', 'gender' => 'female', 'role_code' => 'CLASS-TEACHER', 'department_code' => 'PRIMARY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Class Teacher', 'qualification' => 'nce', 'specialization' => 'Primary Education', 'email' => 'zainab.yusuf.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200014', 'salary_scale_code' => 'GL05-S06'],
-                ['first_name' => 'Tunde', 'middle_name' => null, 'last_name' => 'Adebayo', 'gender' => 'male', 'role_code' => 'CLASS-TEACHER', 'department_code' => 'PRIMARY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Class Teacher', 'qualification' => 'b_ed', 'specialization' => 'Mathematics Education', 'email' => 'tunde.adebayo.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL05-S08'],
-                ['first_name' => 'Chinwe', 'middle_name' => null, 'last_name' => 'Okonkwo', 'gender' => 'female', 'role_code' => 'REGISTRAR', 'department_code' => 'ADMIN', 'staff_type' => Staff::TYPE_NON_TEACHING, 'job_title' => 'Registrar', 'qualification' => 'hnd', 'specialization' => 'Office Administration', 'email' => 'registrar.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200016', 'salary_scale_code' => 'GL04-S08'],
+                ['first_name' => 'Suleiman', 'middle_name' => null, 'last_name' => 'Danlami', 'gender' => 'male', 'role_code' => 'CLASS-TEACHER', 'department_code' => 'PRIMARY', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Class Teacher', 'qualification' => 'b_ed', 'specialization' => 'Mathematics Education', 'email' => 'suleiman.danlami.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL05-S08'],
+                ['first_name' => 'Rakiya', 'middle_name' => null, 'last_name' => 'Umar', 'gender' => 'female', 'role_code' => 'REGISTRAR', 'department_code' => 'ADMIN', 'staff_type' => Staff::TYPE_NON_TEACHING, 'job_title' => 'Registrar', 'qualification' => 'hnd', 'specialization' => 'Office Administration', 'email' => 'registrar.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200016', 'salary_scale_code' => 'GL04-S08'],
             ],
             default => [
                 ['first_name' => 'Musa', 'middle_name' => 'Danjuma', 'last_name' => 'Lawal', 'gender' => 'male', 'role_code' => 'PRINCIPAL', 'department_code' => 'ADMIN', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Principal', 'qualification' => 'm_ed', 'specialization' => 'Educational Management', 'email' => 'principal.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200013', 'salary_scale_code' => 'GL08-S08'],
                 ['first_name' => 'Fatima', 'middle_name' => 'Aisha', 'last_name' => 'Bello', 'gender' => 'female', 'role_code' => 'VICE-PRINCIPAL-ACADEMIC', 'department_code' => 'SCIENCE', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Vice Principal Academics', 'qualification' => 'm_sc', 'specialization' => 'Biology Education', 'email' => 'vp.academics.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200014', 'salary_scale_code' => 'GL08-S02'],
-                ['first_name' => 'Chinedu', 'middle_name' => null, 'last_name' => 'Okeke', 'gender' => 'male', 'role_code' => 'HOD', 'department_code' => 'SCIENCE', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Head of Science Department', 'qualification' => 'b_sc', 'specialization' => 'Physics', 'email' => 'science.hod.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL06-S10'],
+                ['first_name' => 'Adamu', 'middle_name' => null, 'last_name' => 'Bappa', 'gender' => 'male', 'role_code' => 'HOD', 'department_code' => 'SCIENCE', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Head of Science Department', 'qualification' => 'b_sc', 'specialization' => 'Physics', 'email' => 'science.hod.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200015', 'salary_scale_code' => 'GL06-S10'],
                 ['first_name' => 'Aisha', 'middle_name' => 'Kabiru', 'last_name' => 'Sani', 'gender' => 'female', 'role_code' => 'SUBJECT-TEACHER', 'department_code' => 'ARTS', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'English Teacher', 'qualification' => 'b_a', 'specialization' => 'English Language', 'email' => 'aisha.sani.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200016', 'salary_scale_code' => 'GL05-S10'],
-                ['first_name' => 'Obinna', 'middle_name' => null, 'last_name' => 'Nwosu', 'gender' => 'male', 'role_code' => 'SUBJECT-TEACHER', 'department_code' => 'COMMERCIAL', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Commerce Teacher', 'qualification' => 'b_sc', 'specialization' => 'Economics', 'email' => 'obinna.nwosu.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200017', 'salary_scale_code' => 'GL05-S08'],
-                ['first_name' => 'Ruth', 'middle_name' => null, 'last_name' => 'Eze', 'gender' => 'female', 'role_code' => 'REGISTRAR', 'department_code' => 'ADMIN', 'staff_type' => Staff::TYPE_NON_TEACHING, 'job_title' => 'Registrar', 'qualification' => 'hnd', 'specialization' => 'Office Administration', 'email' => 'registrar.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200018', 'salary_scale_code' => 'GL04-S10'],
+                ['first_name' => 'Nuhu', 'middle_name' => null, 'last_name' => 'Ahmadu', 'gender' => 'male', 'role_code' => 'SUBJECT-TEACHER', 'department_code' => 'COMMERCIAL', 'staff_type' => Staff::TYPE_TEACHING, 'job_title' => 'Commerce Teacher', 'qualification' => 'b_sc', 'specialization' => 'Economics', 'email' => 'nuhu.ahmadu.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200017', 'salary_scale_code' => 'GL05-S08'],
+                ['first_name' => 'Hauwa', 'middle_name' => null, 'last_name' => 'Sale', 'gender' => 'female', 'role_code' => 'REGISTRAR', 'department_code' => 'ADMIN', 'staff_type' => Staff::TYPE_NON_TEACHING, 'job_title' => 'Registrar', 'qualification' => 'hnd', 'specialization' => 'Office Administration', 'email' => 'registrar.'.Str::slug($school->slug).'@example.com', 'phone' => '+2348022200018', 'salary_scale_code' => 'GL04-S10'],
             ],
         };
 
@@ -400,14 +399,53 @@ class StaffSampleSetup
                     'address' => $school->address ?: 'Sample staff quarters, Nigeria',
                     'city' => $school->city ?: 'Abuja',
                     'state' => $school->state ?: 'FCT',
-                    'education_school' => 'University of Maiduguri',
+                    'education_school' => self::educationSchool($profile),
                     'trcn_number' => $profile['staff_type'] === Staff::TYPE_TEACHING ? 'TRCN/'.now()->year.'/'.str_pad((string) ($index + 1), 4, '0', STR_PAD_LEFT) : null,
-                    'next_of_kin' => 'Aminu '.$profile['last_name'],
+                    'next_of_kin' => self::nextOfKinName($profile),
                     'next_of_kin_phone' => '+23480333000'.str_pad((string) ($index + 1), 2, '0', STR_PAD_LEFT),
                     'payroll_sheet' => $payrollSheet,
                 ];
             })
             ->all();
+    }
+
+    /**
+     * A same-surname "spouse" name for the next-of-kin field, picked to fit
+     * the staff member's own family/cultural background rather than reusing
+     * one generic first name for every profile.
+     */
+    protected static function nextOfKinName(array $profile): string
+    {
+        $christianSurnames = ['Gyang', 'Vandi', 'Audu'];
+
+        $spouseFirstNames = in_array($profile['last_name'], $christianSurnames, true)
+            ? ($profile['gender'] === 'male' ? ['Grace', 'Comfort', 'Ruth'] : ['Emmanuel', 'Solomon', 'Daniel'])
+            : ($profile['gender'] === 'male' ? ['Amina', 'Hauwa', 'Zainab'] : ['Ibrahim', 'Musa', 'Abdullahi']);
+
+        $index = crc32($profile['last_name']) % count($spouseFirstNames);
+
+        return $spouseFirstNames[$index].' '.$profile['last_name'];
+    }
+
+    /**
+     * A plausible Northern Nigerian institution matched to the staff
+     * member's qualification level, varied deterministically by surname
+     * rather than sending every staff member to the same university.
+     */
+    protected static function educationSchool(array $profile): string
+    {
+        $qualification = $profile['qualification'] ?? 'b_ed';
+        $seed = crc32($profile['last_name'].$profile['first_name']);
+
+        $pools = [
+            'nce' => ['Federal College of Education, Kano', 'Federal College of Education, Katsina', 'Federal College of Education, Yola', 'College of Education, Azare'],
+            'hnd' => ['Kaduna Polytechnic', 'Federal Polytechnic, Bauchi', 'Federal Polytechnic, Damaturu', 'Waziri Umaru Federal Polytechnic, Birnin Kebbi'],
+            'default' => ['University of Maiduguri', 'Bayero University, Kano', 'Ahmadu Bello University, Zaria', 'Usmanu Danfodiyo University, Sokoto', 'Federal University, Dutse', 'Modibbo Adama University, Yola'],
+        ];
+
+        $pool = $pools[$qualification] ?? $pools['default'];
+
+        return $pool[$seed % count($pool)];
     }
 
     protected static function salaryScaleMatrix(): array

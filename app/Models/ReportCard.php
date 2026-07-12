@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['school_id', 'exam_id', 'student_id', 'academic_year_id', 'term_id', 'total_score', 'average_score', 'position', 'attendance_total_days', 'attendance_present_days', 'attendance_absent_days', 'teacher_comment', 'principal_comment', 'status', 'published_at'])]
 class ReportCard extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -35,10 +36,11 @@ use Illuminate\Support\Str;
     'student_limit',
     'enabled_modules',
     'is_active',
+    'withhold_results_for_debtors',
 ])]
 class School extends Model implements HasAvatar, HasName
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     public const DIVISION_NURSERY = 'nursery';
 
@@ -64,6 +66,35 @@ class School extends Model implements HasAvatar, HasName
 
             $query->whereKey($tenant);
         });
+
+        static::deleting(function (School $school): void {
+            if ($school->isForceDeleting()) {
+                $school->divisions()
+                    ->withoutGlobalScope('school-panel-current-tenant')
+                    ->withTrashed()
+                    ->get()
+                    ->each->forceDelete();
+
+                return;
+            }
+
+            $school->divisions()
+                ->withoutGlobalScope('school-panel-current-tenant')
+                ->get()
+                ->each->delete();
+
+            $school->softDeleteRecoverableSchoolRecords();
+        });
+
+        static::restored(function (School $school): void {
+            $school->divisions()
+                ->withoutGlobalScope('school-panel-current-tenant')
+                ->onlyTrashed()
+                ->get()
+                ->each->restore();
+
+            $school->restoreRecoverableSchoolRecords();
+        });
     }
 
     protected function casts(): array
@@ -72,6 +103,7 @@ class School extends Model implements HasAvatar, HasName
             'enabled_modules' => 'array',
             'is_active' => 'boolean',
             'subscription_expires_at' => 'datetime',
+            'withhold_results_for_debtors' => 'boolean',
         ];
     }
 
@@ -175,13 +207,13 @@ class School extends Model implements HasAvatar, HasName
 
         if ($this->parent_school_id) {
             return self::query()
-                ->withoutGlobalScopes()
+                ->withoutGlobalScope('school-panel-current-tenant')
                 ->whereKey($this->parent_school_id)
                 ->value('logo_path');
         }
 
         return self::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->where('parent_school_id', $this->getKey())
             ->whereNotNull('logo_path')
             ->where('logo_path', '!=', '')
@@ -211,7 +243,7 @@ class School extends Model implements HasAvatar, HasName
         }
 
         return self::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->whereKey($this->parent_school_id)
             ->value('name') ?? $this->name;
     }
@@ -228,7 +260,7 @@ class School extends Model implements HasAvatar, HasName
         }
 
         return self::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope('school-panel-current-tenant')
             ->where('parent_school_id', $this->getKey())
             ->where('is_active', true)
             ->orderByRaw("case division when 'nursery' then 1 when 'primary' then 2 when 'secondary' then 3 else 4 end")
@@ -236,9 +268,82 @@ class School extends Model implements HasAvatar, HasName
             ->first() ?? $this;
     }
 
+    /**
+     * A root school that owns division records is an administrative container,
+     * not a portal workspace. Legacy schools without divisions remain valid
+     * workspaces so existing installations are not locked out.
+     */
+    public function isPortalWorkspace(): bool
+    {
+        return filled($this->division)
+            || ! self::query()
+                ->withoutGlobalScope('school-panel-current-tenant')
+                ->where('parent_school_id', $this->getKey())
+                ->exists();
+    }
+
+    public function isSubscriptionExpired(): bool
+    {
+        return $this->subscription_expires_at?->isPast() ?? false;
+    }
+
+    public function isAvailableToSchoolUsers(): bool
+    {
+        return (bool) $this->is_active && ! $this->isSubscriptionExpired();
+    }
+
+    public function scopePortalWorkspaces(Builder $query): Builder
+    {
+        return $query->where(function (Builder $query): void {
+            $query
+                ->whereNotNull('division')
+                ->orWhereDoesntHave('divisions');
+        });
+    }
+
     public function portalUrl(): string
     {
         return url('/portal/'.$this->portalSchool()->slug);
+    }
+
+    protected function softDeleteRecoverableSchoolRecords(): void
+    {
+        foreach ($this->recoverableSchoolRecordModels() as $model) {
+            $model::query()
+                ->withoutGlobalScopes()
+                ->where('school_id', $this->getKey())
+                ->get()
+                ->each->delete();
+        }
+    }
+
+    protected function restoreRecoverableSchoolRecords(): void
+    {
+        foreach ($this->recoverableSchoolRecordModels() as $model) {
+            $model::query()
+                ->withoutGlobalScopes()
+                ->onlyTrashed()
+                ->where('school_id', $this->getKey())
+                ->get()
+                ->each->restore();
+        }
+    }
+
+    /**
+     * Models with SoftDeletes that should disappear with the school but remain
+     * restorable when a school delete was a mistake.
+     *
+     * @return array<class-string<Model>>
+     */
+    protected function recoverableSchoolRecordModels(): array
+    {
+        return [
+            FeePayment::class,
+            StudentInvoice::class,
+            AccountTransaction::class,
+            SalaryPosting::class,
+            Student::class,
+        ];
     }
 
     protected function slug(): Attribute

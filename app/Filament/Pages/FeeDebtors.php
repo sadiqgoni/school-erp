@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\SchoolClass;
 use App\Models\StudentInvoice;
 use App\Support\WhatsApp;
 use BackedEnum;
@@ -36,6 +37,8 @@ class FeeDebtors extends Page implements HasTable
 
     protected Width|string|null $maxContentWidth = Width::Full;
 
+    public string $classTab = 'all';
+
     public static function canAccess(): bool
     {
         $user = Filament::auth()->user();
@@ -64,10 +67,52 @@ class FeeDebtors extends Page implements HasTable
         return 'danger';
     }
 
+    public function setClassTab(string $tab): void
+    {
+        if ($tab !== 'all' && ! str_starts_with($tab, 'class_')) {
+            return;
+        }
+
+        $this->classTab = $tab;
+        $this->resetPage();
+    }
+
+    /**
+     * @return array<string, array{label: string, count: int}>
+     */
+    public function classTabs(): array
+    {
+        $tabs = [
+            'all' => [
+                'label' => 'All debtors',
+                'count' => static::debtorQuery()->count(),
+            ],
+        ];
+
+        SchoolClass::query()
+            ->where('school_id', Filament::getTenant()?->getKey())
+            ->where('is_active', true)
+            ->orderBy('level')
+            ->orderBy('name')
+            ->get()
+            ->each(function (SchoolClass $class) use (&$tabs): void {
+                $tabs['class_'.$class->getKey()] = [
+                    'label' => $class->name,
+                    'count' => static::debtorQuery()
+                        ->whereHas('student.enrollments', fn (Builder $query): Builder => $query->where('school_class_id', $class->getKey()))
+                        ->count(),
+                ];
+            });
+
+        return $tabs;
+    }
+
     public function table(Table $table): Table
     {
         return $table
             ->query(fn (): Builder => static::debtorQuery()
+                ->when($this->activeClassId(), fn (Builder $query, int $classId): Builder => $query
+                    ->whereHas('student.enrollments', fn (Builder $query): Builder => $query->where('school_class_id', $classId)))
                 ->with(['student.enrollments.schoolClass', 'student.enrollments.classSection', 'school']))
             ->columns([
                 TextColumn::make('student.full_name')
@@ -148,6 +193,15 @@ class FeeDebtors extends Page implements HasTable
             ->where('school_id', Filament::getTenant()?->getKey())
             ->where('balance', '>', 0)
             ->whereNot('status', 'cancelled');
+    }
+
+    protected function activeClassId(): ?int
+    {
+        if (! str_starts_with($this->classTab, 'class_')) {
+            return null;
+        }
+
+        return (int) str($this->classTab)->after('class_')->toString();
     }
 
     protected static function placementLabel(StudentInvoice $record): string

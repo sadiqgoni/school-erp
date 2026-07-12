@@ -9,6 +9,7 @@ use App\Models\ReportCardTraitRating;
 use App\Models\ResultTraitItem;
 use App\Models\SchoolClass;
 use App\Models\StudentScore;
+use App\Support\OutboundEmail;
 use App\Support\TeacherWorkspace;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -316,6 +317,8 @@ class ReportCardsTable
                             'published_at' => now(),
                         ])->save();
 
+                        app(OutboundEmail::class)->queueReportCardPublished($record);
+
                         Notification::make()
                             ->title('Report card published')
                             ->success()
@@ -350,10 +353,18 @@ class ReportCardsTable
                         ->color('success')
                         ->requiresConfirmation()
                         ->action(function ($records): void {
-                            $records->each(fn (ReportCard $record) => $record->forceFill([
-                                'status' => 'published',
-                                'published_at' => now(),
-                            ])->save());
+                            $records->each(function (ReportCard $record): void {
+                                $wasPublished = $record->status === 'published';
+
+                                $record->forceFill([
+                                    'status' => 'published',
+                                    'published_at' => now(),
+                                ])->save();
+
+                                if (! $wasPublished) {
+                                    app(OutboundEmail::class)->queueReportCardPublished($record);
+                                }
+                            });
 
                             Notification::make()
                                 ->title('Selected report cards published')

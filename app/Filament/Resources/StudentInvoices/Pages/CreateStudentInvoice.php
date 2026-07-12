@@ -7,6 +7,7 @@ use App\Filament\Resources\StudentInvoices\StudentInvoiceResource;
 use App\Models\FeeType;
 use App\Models\StudentInvoice;
 use App\Models\StudentInvoiceItem;
+use App\Support\PaymentCommunicationCoordinator;
 use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -54,8 +55,12 @@ class CreateStudentInvoice extends CreateRecord
             }
 
             $invoice->refreshAmounts();
+            $invoice = $invoice->fresh();
 
-            return $invoice->fresh();
+            app(PaymentCommunicationCoordinator::class)->queueInvoiceReminder($invoice);
+            app(PaymentCommunicationCoordinator::class)->scheduleInvoiceDueReminders($invoice);
+
+            return $invoice;
         });
     }
 }

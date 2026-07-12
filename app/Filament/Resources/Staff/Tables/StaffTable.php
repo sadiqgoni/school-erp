@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\Staff\Tables;
 
 use App\Filament\Resources\TeachingAssignments\TeachingAssignmentResource;
+use App\Mail\LoginCredentialsMail;
 use App\Models\AcademicYear;
 use App\Models\ClassSection;
 use App\Models\ClassSubject;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Staff;
 use App\Models\Subject;
@@ -29,6 +31,8 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class StaffTable
 {
@@ -372,6 +376,7 @@ class StaffTable
                                     'password' => Hash::make($data['password']),
                                     'is_platform_admin' => false,
                                     'is_active' => true,
+                                    'must_change_password' => true,
                                 ],
                             );
 
@@ -392,9 +397,13 @@ class StaffTable
                             ])->save();
                         });
 
+                        $emailSent = self::sendLoginCredentials($record, $data['email'], $data['password'], $data['school_role'] ?? null);
+
                         Notification::make()
                             ->title('Login account created')
-                            ->body("{$record->full_name} can now sign in with {$data['email']}.")
+                            ->body($emailSent
+                                ? "{$record->full_name} can now sign in with {$data['email']}. Login details have been emailed."
+                                : "{$record->full_name} can now sign in with {$data['email']}. Email could not be sent, so share the temporary password manually.")
                             ->success()
                             ->send();
                     }),
@@ -508,5 +517,31 @@ class StaffTable
             'staff_id' => $replacement?->staff_id,
             'teacher_id' => $replacement?->staff?->user_id,
         ])->save();
+    }
+
+    protected static function sendLoginCredentials(Staff $staff, string $email, string $temporaryPassword, ?string $role): bool
+    {
+        $school = School::query()->find($staff->school_id);
+
+        try {
+            Mail::to($email)->send(new LoginCredentialsMail(
+                school: $school,
+                name: $staff->full_name,
+                email: $email,
+                temporaryPassword: $temporaryPassword,
+                portalUrl: $school?->slug ? url('/portal/'.$school->slug) : url('/'),
+                roleLabel: match ($role) {
+                    User::SCHOOL_ROLE_TEACHER => 'teacher portal',
+                    User::SCHOOL_ROLE_FINANCE => 'finance portal',
+                    default => 'staff portal',
+                },
+            ));
+
+            return true;
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return false;
+        }
     }
 }

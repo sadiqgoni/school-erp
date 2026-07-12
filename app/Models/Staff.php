@@ -54,6 +54,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 ])]
 class Staff extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     public const TYPE_TEACHING = 'teaching';

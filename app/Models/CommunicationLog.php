@@ -34,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 ])]
 class CommunicationLog extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class TeachingAssignment extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     public const ROLE_FORM_TEACHER = 'form_teacher';

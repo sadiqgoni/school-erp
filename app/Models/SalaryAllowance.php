@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SalaryAllowance extends Model
 {
     use CalculatesSalaryItemAmount;
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

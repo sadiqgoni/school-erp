@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 #[Fillable(['school_id', 'name', 'code', 'description', 'permissions', 'is_active'])]
 class StaffRole extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void

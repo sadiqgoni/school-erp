@@ -7,17 +7,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['school_id', 'student_id', 'academic_year_id', 'term_id', 'student_discount_id', 'income_account_id', 'invoice_number', 'invoice_type', 'invoice_date', 'due_date', 'subtotal', 'discount', 'total', 'amount_paid', 'balance', 'status', 'payment_provider', 'payment_reference', 'payment_url', 'payment_status', 'payment_metadata', 'notes'])]
 class StudentInvoice extends Model
 {
-    use HasFactory;
+    use Concerns\BelongsToSchool;
+    use HasFactory, SoftDeletes;
 
     protected static function booted(): void
     {
         static::creating(function (StudentInvoice $invoice): void {
             if (blank($invoice->invoice_number)) {
-                $invoice->invoice_number = 'INV-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->count() + 1), 4, '0', STR_PAD_LEFT);
+                $invoice->invoice_number = 'INV-'.now()->format('Ymd').'-'.str_pad((string) (static::query()->withoutGlobalScopes()->where('school_id', $invoice->school_id)->count() + 1), 4, '0', STR_PAD_LEFT);
             }
         });
     }

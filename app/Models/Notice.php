@@ -25,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 ])]
 class Notice extends Model
 {
+    use Concerns\BelongsToSchool;
+
     public const AUDIENCE_ALL = 'all';
 
     public const AUDIENCE_DIVISION = 'division';

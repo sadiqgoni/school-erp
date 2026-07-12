@@ -17,6 +17,7 @@ use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ListCompiledResults extends ListRecords
@@ -86,11 +87,16 @@ class ListCompiledResults extends ListRecords
                 ->groupBy(fn (StudentScore $score): string => $score->student_id.'-'.$score->subject_id);
 
             $compiled = collect();
+            $gradeScales = GradeScale::query()
+                ->where('school_id', $schoolId)
+                ->where('is_active', true)
+                ->orderByDesc('min_score')
+                ->get();
 
             foreach ($scores as $group) {
                 $first = $group->first();
                 $total = (float) $group->sum('score');
-                $grade = self::resolveGrade($schoolId, $total);
+                $grade = self::resolveGrade($gradeScales, $total);
 
                 $compiledResult = CompiledResult::query()->updateOrCreate(
                     [
@@ -111,7 +117,7 @@ class ListCompiledResults extends ListRecords
                 $compiled->push($compiledResult);
             }
 
-            self::rankSubjects($exam->getKey());
+            self::rankSubjects($exam);
 
             if ($data['create_report_cards'] ?? true) {
                 self::createReportCards($exam, $compiled);
@@ -125,31 +131,50 @@ class ListCompiledResults extends ListRecords
         });
     }
 
-    protected static function resolveGrade(int $schoolId, float $score): ?GradeScale
+    /**
+     * @param  Collection<int, GradeScale>  $gradeScales  active scales sorted by min_score desc
+     */
+    protected static function resolveGrade($gradeScales, float $score): ?GradeScale
     {
-        return GradeScale::query()
-            ->where('school_id', $schoolId)
-            ->where('is_active', true)
-            ->where('min_score', '<=', $score)
-            ->where('max_score', '>=', $score)
-            ->orderByDesc('min_score')
-            ->first();
+        return $gradeScales->first(fn (GradeScale $scale): bool => $score >= (float) $scale->min_score
+            && $score <= (float) $scale->max_score);
     }
 
-    protected static function rankSubjects(int $examId): void
+    /**
+     * Rank each subject within the student's class/arm (not school-wide),
+     * giving equal scores the same joint position.
+     */
+    protected static function rankSubjects(Exam $exam): void
     {
-        CompiledResult::query()
-            ->where('exam_id', $examId)
-            ->get()
-            ->groupBy('subject_id')
-            ->each(function ($results): void {
-                $position = 1;
+        $results = CompiledResult::query()
+            ->where('exam_id', $exam->getKey())
+            ->get();
 
-                $results
-                    ->sortByDesc('total_score')
-                    ->each(function (CompiledResult $result) use (&$position): void {
-                        $result->forceFill(['position' => $position++])->save();
-                    });
+        $placements = $results
+            ->pluck('student_id')
+            ->unique()
+            ->mapWithKeys(fn ($studentId): array => [
+                $studentId => self::placementKey(self::studentPlacement($exam, (int) $studentId)),
+            ]);
+
+        $results
+            ->groupBy(fn (CompiledResult $result): string => $result->subject_id.'|'.$placements->get($result->student_id))
+            ->each(function ($group): void {
+                $previousScore = null;
+                $position = 0;
+                $index = 0;
+
+                foreach ($group->sortByDesc(fn (CompiledResult $result): float => (float) $result->total_score) as $result) {
+                    $index++;
+                    $score = (float) $result->total_score;
+
+                    if ($previousScore === null || $score < $previousScore) {
+                        $position = $index;
+                        $previousScore = $score;
+                    }
+
+                    $result->forceFill(['position' => $position])->save();
+                }
             });
     }
 
@@ -199,19 +224,26 @@ class ListCompiledResults extends ListRecords
                 preserveKeys: true,
             )
             ->each(function ($classTotals) use ($reportCards): void {
-                $position = 1;
+                $previousAverage = null;
+                $position = 0;
+                $index = 0;
 
-                $classTotals
-                    ->sortByDesc('average')
-                    ->each(function (array $summary, $studentId) use (&$position, $reportCards): void {
-                        $reportCard = $reportCards->get($studentId);
+                foreach ($classTotals->sortByDesc('average') as $studentId => $summary) {
+                    $reportCard = $reportCards->get($studentId);
 
-                        if (! $reportCard) {
-                            return;
-                        }
+                    if (! $reportCard) {
+                        continue;
+                    }
 
-                        $reportCard->forceFill(['position' => $position++])->save();
-                    });
+                    $index++;
+
+                    if ($previousAverage === null || $summary['average'] < $previousAverage) {
+                        $position = $index;
+                        $previousAverage = $summary['average'];
+                    }
+
+                    $reportCard->forceFill(['position' => $position])->save();
+                }
             });
     }
 
@@ -224,7 +256,7 @@ class ListCompiledResults extends ListRecords
             ->when($exam->term_id, fn ($query, $termId) => $query->where(fn ($query) => $query
                 ->where('term_id', $termId)
                 ->orWhereNull('term_id')))
-            ->where('status', 'active')
+            ->orderByRaw("case when status = 'active' then 0 else 1 end")
             ->orderByRaw('term_id is null')
             ->latest('enrolled_on')
             ->first();

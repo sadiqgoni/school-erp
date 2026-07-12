@@ -21,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 ])]
 class Guardian extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

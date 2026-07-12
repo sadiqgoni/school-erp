@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\StudentInvoices\Pages;
 
-use App\Filament\Support\ClassTabs;
 use App\Filament\Resources\StudentInvoices\StudentInvoiceResource;
+use App\Filament\Support\ClassTabs;
 use App\Models\AcademicYear;
 use App\Models\Enrollment;
 use App\Models\FeeStructure;
@@ -14,6 +14,7 @@ use App\Models\StudentInvoice;
 use App\Models\StudentInvoiceItem;
 use App\Models\Term;
 use App\Support\FinanceSampleSetup;
+use App\Support\PaymentCommunicationCoordinator;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Facades\Filament;
@@ -161,6 +162,11 @@ class ListStudentInvoices extends ListRecords
                             }
 
                             $invoice->refreshAmounts();
+                            $invoice = $invoice->fresh();
+
+                            app(PaymentCommunicationCoordinator::class)->queueInvoiceReminder($invoice);
+                            app(PaymentCommunicationCoordinator::class)->scheduleInvoiceDueReminders($invoice);
+
                             $created++;
                         }
                     });

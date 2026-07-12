@@ -18,7 +18,7 @@ class PaymentCommunicationCoordinator
     {
         $invoice->loadMissing(['student.guardianLinks.guardian', 'school']);
 
-        $logs = new Collection();
+        $logs = new Collection;
 
         foreach ($this->guardianLinksFor($invoice) as $link) {
             $guardian = $link->guardian;
@@ -48,7 +48,7 @@ class PaymentCommunicationCoordinator
     {
         $payment->loadMissing(['studentInvoice.school', 'student.guardianLinks.guardian']);
 
-        $logs = new Collection();
+        $logs = new Collection;
         $invoice = $payment->studentInvoice;
 
         if (! $invoice) {
@@ -85,23 +85,7 @@ class PaymentCommunicationCoordinator
             }
 
             if (filled($guardian->email)) {
-                $logs->push(CommunicationLog::query()->create([
-                    'school_id' => $payment->school_id,
-                    'student_id' => $payment->student_id,
-                    'guardian_id' => $guardian->getKey(),
-                    'related_type' => FeePayment::class,
-                    'related_id' => $payment->getKey(),
-                    'event_type' => 'fee_payment_received',
-                    'channel' => 'email',
-                    'recipient_name' => $guardian->name,
-                    'recipient_contact' => $guardian->email,
-                    'subject' => 'Payment received',
-                    'body' => $message,
-                    'metadata' => [
-                        'invoice_id' => $invoice->getKey(),
-                        'receipt_number' => $payment->receipt_number,
-                    ],
-                ]));
+                $logs->push($this->createPaymentCommunicationLog($payment, $invoice, $guardian->getKey(), $guardian->name, $guardian->email, $message));
             }
         }
 
@@ -115,31 +99,23 @@ class PaymentCommunicationCoordinator
     {
         $invoice->loadMissing(['student.guardianLinks.guardian']);
 
-        $reminders = new Collection();
+        $reminders = new Collection;
         $scheduledFor = $invoice->due_date?->copy()->subDays(3)->startOfDay() ?? now();
 
         foreach ($this->guardianLinksFor($invoice) as $link) {
             $guardian = $link->guardian;
 
-            if (! $guardian || ! $link->receives_sms || blank($guardian->phone)) {
+            if (! $guardian) {
                 continue;
             }
 
-            $reminders->push(Reminder::query()->create([
-                'school_id' => $invoice->school_id,
-                'student_invoice_id' => $invoice->getKey(),
-                'student_id' => $invoice->student_id,
-                'guardian_id' => $guardian->getKey(),
-                'type' => 'fee_due',
-                'channel' => 'sms',
-                'recipient_contact' => $guardian->phone,
-                'message' => $this->invoiceReminderMessage($invoice),
-                'scheduled_for' => $scheduledFor,
-                'metadata' => [
-                    'invoice_number' => $invoice->invoice_number,
-                    'balance' => $invoice->balance,
-                ],
-            ]));
+            if ($link->receives_sms && filled($guardian->phone)) {
+                $reminders->push($this->createInvoiceDueReminder($invoice, $guardian->getKey(), 'sms', $guardian->phone, $scheduledFor));
+            }
+
+            if (filled($guardian->email)) {
+                $reminders->push($this->createInvoiceDueReminder($invoice, $guardian->getKey(), 'email', $guardian->email, $scheduledFor));
+            }
         }
 
         return $reminders;
@@ -153,7 +129,7 @@ class PaymentCommunicationCoordinator
         return $invoice->student?->guardianLinks
             ->filter(fn (GuardianStudent $link): bool => (bool) $link->guardian?->is_active)
             ->sortByDesc('is_primary_contact')
-            ->values() ?? new Collection();
+            ->values() ?? new Collection;
     }
 
     protected function createInvoiceCommunicationLog(
@@ -164,7 +140,7 @@ class PaymentCommunicationCoordinator
         string $message,
         string $eventType,
     ): CommunicationLog {
-        return CommunicationLog::query()->create([
+        $log = CommunicationLog::query()->create([
             'school_id' => $invoice->school_id,
             'student_id' => $invoice->student_id,
             'guardian_id' => $link->guardian_id,
@@ -176,6 +152,68 @@ class PaymentCommunicationCoordinator
             'recipient_contact' => $contact,
             'subject' => 'School fee invoice',
             'body' => $message,
+            'metadata' => [
+                'invoice_number' => $invoice->invoice_number,
+                'payment_url' => $invoice->payment_url,
+                'balance' => $invoice->balance,
+            ],
+        ]);
+
+        if ($channel === 'email') {
+            app(OutboundEmail::class)->sendCommunicationLog($log);
+        }
+
+        return $log;
+    }
+
+    protected function createPaymentCommunicationLog(
+        FeePayment $payment,
+        StudentInvoice $invoice,
+        int $guardianId,
+        ?string $guardianName,
+        string $contact,
+        string $message,
+    ): CommunicationLog {
+        $log = CommunicationLog::query()->create([
+            'school_id' => $payment->school_id,
+            'student_id' => $payment->student_id,
+            'guardian_id' => $guardianId,
+            'related_type' => FeePayment::class,
+            'related_id' => $payment->getKey(),
+            'event_type' => 'fee_payment_received',
+            'channel' => 'email',
+            'recipient_name' => $guardianName,
+            'recipient_contact' => $contact,
+            'subject' => 'Payment received',
+            'body' => $message,
+            'metadata' => [
+                'invoice_id' => $invoice->getKey(),
+                'receipt_number' => $payment->receipt_number,
+            ],
+        ]);
+
+        app(OutboundEmail::class)->sendCommunicationLog($log);
+
+        return $log;
+    }
+
+    protected function createInvoiceDueReminder(
+        StudentInvoice $invoice,
+        int $guardianId,
+        string $channel,
+        string $contact,
+        mixed $scheduledFor,
+    ): Reminder {
+        return Reminder::query()->create([
+            'school_id' => $invoice->school_id,
+            'student_invoice_id' => $invoice->getKey(),
+            'student_id' => $invoice->student_id,
+            'guardian_id' => $guardianId,
+            'type' => 'fee_due',
+            'channel' => $channel,
+            'recipient_contact' => $contact,
+            'message' => $this->invoiceReminderMessage($invoice),
+            'scheduled_for' => $scheduledFor,
             'metadata' => [
                 'invoice_number' => $invoice->invoice_number,
                 'payment_url' => $invoice->payment_url,

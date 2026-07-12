@@ -75,19 +75,36 @@ class ListStudents extends ListRecords
 
         DB::transaction(function () use ($school, $count): void {
             [$academicYear, $term] = $this->ensureCurrentSession($school);
-            $classes = $this->ensureClasses($school);
+            $classes = $this->ensureClasses($school)->values();
             $sections = $this->ensureSections($school, $classes);
             $families = $this->sampleFamilies();
+            $familyCount = count($families);
+            $classCount = $classes->count();
+
+            // Each class gets its own cursor into the family list, starting at a
+            // different offset (its position among the classes). That way a class
+            // cycles through every family before it ever repeats one, instead of
+            // the same one or two guardians' children clustering into one class.
+            $familyCursorPerClass = [];
+            $familyUsageCount = array_fill(0, $familyCount, 0);
             $created = 0;
 
             foreach (range(1, $count) as $index) {
-                $familyIndex = ($index - 1) % count($families);
-                $familyRound = intdiv($index - 1, count($families));
+                $classPosition = ($index - 1) % $classCount;
+                $class = $classes[$classPosition];
+                $classKey = $class->getKey();
+
+                $slotInClass = $familyCursorPerClass[$classKey] ?? 0;
+                $familyCursorPerClass[$classKey] = $slotInClass + 1;
+                $familyIndex = ($classPosition + $slotInClass) % $familyCount;
+
+                $familyRound = $familyUsageCount[$familyIndex];
+                $familyUsageCount[$familyIndex]++;
+
                 $family = $this->sectionFamily($families[$familyIndex], $school);
                 $gender = $index % 3 === 0 ? 'female' : ($index % 2 === 0 ? 'female' : 'male');
                 $firstName = $this->firstName($family, $gender, $familyRound);
-                $class = $classes[($index - 1) % $classes->count()];
-                $section = $sections[$class->getKey()] ?? null;
+                $section = $sections[$classKey] ?? null;
                 $divisionCode = strtoupper((string) ($school->division ?: 'SCH'));
                 $admissionNumber = sprintf('%s/SAMPLE/%s/%03d', $school->code ?: 'SCH', $divisionCode, $index);
 
@@ -291,12 +308,86 @@ class ListStudents extends ListRecords
     protected function sampleFamilies(): array
     {
         return [
-            ['guardian' => 'Malam Ibrahim Abubakar', 'surname' => 'Abubakar', 'middle' => 'Ibrahim', 'relationship' => 'father', 'phone' => '+2348011100011', 'email' => 'ibrahim.abubakar@example.com', 'occupation' => 'Civil Servant', 'address' => 'Gwange Ward, Maiduguri', 'city' => 'Maiduguri', 'state' => 'Borno', 'religion' => 'Islam', 'male' => ['Usman', 'Musa', 'Yusuf'], 'female' => ['Aisha', 'Fatima', 'Maryam'], 'primary_male' => ['Nasir', 'Mustapha', 'Hamza'], 'primary_female' => ['Jamila', 'Rukayya', 'Asma'], 'secondary_male' => ['Abdullahi', 'Suleiman', 'Nura'], 'secondary_female' => ['Zulaihat', 'Fadila', 'Sumayya']],
-            ['guardian' => 'Hajiya Zainab Bello', 'surname' => 'Bello', 'middle' => 'Sani', 'relationship' => 'mother', 'phone' => '+2348011100012', 'email' => 'zainab.bello@example.com', 'occupation' => 'Trader', 'address' => 'Tarauni, Kano', 'city' => 'Kano', 'state' => 'Kano', 'religion' => 'Islam', 'male' => ['Sani', 'Kabiru', 'Danjuma'], 'female' => ['Zainab', 'Hauwa', 'Khadija'], 'primary_male' => ['Farouk', 'Mansur', 'Dawud'], 'primary_female' => ['Saadatu', 'Nafisa', 'Lantana'], 'secondary_male' => ['Iliyasu', 'Mukhtar', 'Tijjani'], 'secondary_female' => ['Aminatu', 'Hafsat', 'Kaltume']],
-            ['guardian' => 'Alhaji Musa Lawal', 'surname' => 'Lawal', 'middle' => 'Musa', 'relationship' => 'father', 'phone' => '+2348011100013', 'email' => 'musa.lawal@example.com', 'occupation' => 'Business Person', 'address' => 'Tudun Wada, Kaduna', 'city' => 'Kaduna', 'state' => 'Kaduna', 'religion' => 'Islam', 'male' => ['Aminu', 'Haruna', 'Salisu'], 'female' => ['Safiya', 'Rahma', 'Rabi'], 'primary_male' => ['Jibril', 'Ismail', 'Ridwan'], 'primary_female' => ['Maimuna', 'Farida', 'Sadiya'], 'secondary_male' => ['Yakubu', 'Sadiq', 'Hashim'], 'secondary_female' => ['Habiba', 'Khadija', 'Aisha']],
-            ['guardian' => 'Mrs Grace Okafor', 'surname' => 'Okafor', 'middle' => 'Chukwuemeka', 'relationship' => 'mother', 'phone' => '+2348011100014', 'email' => 'grace.okafor@example.com', 'occupation' => 'Nurse', 'address' => 'Gwarinpa Estate, Abuja', 'city' => 'Abuja', 'state' => 'FCT', 'religion' => 'Christianity', 'male' => ['Chinedu', 'Emeka', 'Kelechi'], 'female' => ['Adaeze', 'Chinwe', 'Amara'], 'primary_male' => ['Obinna', 'Somto', 'Ikenna'], 'primary_female' => ['Nneka', 'Uchechi', 'Chiamaka'], 'secondary_male' => ['Chibuzor', 'Nonso', 'Ebuka'], 'secondary_female' => ['Ifunanya', 'Ngozi', 'Ogechi']],
-            ['guardian' => 'Mr Tunde Adebayo', 'surname' => 'Adebayo', 'middle' => 'Oluwaseun', 'relationship' => 'father', 'phone' => '+2348011100015', 'email' => 'tunde.adebayo@example.com', 'occupation' => 'Banker', 'address' => 'Bodija, Ibadan', 'city' => 'Ibadan', 'state' => 'Oyo', 'religion' => 'Christianity', 'male' => ['Tobi', 'Femi', 'Damilola'], 'female' => ['Simisola', 'Morenike', 'Teniola'], 'primary_male' => ['Ayomide', 'Boluwatife', 'Ireoluwa'], 'primary_female' => ['Toluwani', 'Anjola', 'Olamide'], 'secondary_male' => ['Oluwadamilare', 'Temitayo', 'Akinwale'], 'secondary_female' => ['Yetunde', 'Folashade', 'Moyosore']],
-            ['guardian' => 'Hajiya Hadiza Garba', 'surname' => 'Garba', 'middle' => 'Aliyu', 'relationship' => 'mother', 'phone' => '+2348011100016', 'email' => 'hadiza.garba@example.com', 'occupation' => 'Teacher', 'address' => 'Nassarawa GRA, Katsina', 'city' => 'Katsina', 'state' => 'Katsina', 'religion' => 'Islam', 'male' => ['Aliyu', 'Bashir', 'Umar'], 'female' => ['Hadiza', 'Bilkisu', 'Halima'], 'primary_male' => ['Auwal', 'Mahmud', 'Nasiru'], 'primary_female' => ['Rashida', 'Falmata', 'Suhaila'], 'secondary_male' => ['Shehu', 'Balarabe', 'Gambo'], 'secondary_female' => ['Raihana', 'Amina', 'Mubina']],
+            [
+                'guardian' => 'Malam Ibrahim Abubakar', 'surname' => 'Abubakar', 'middle' => 'Ibrahim', 'relationship' => 'father',
+                'phone' => '+2348011100011', 'email' => 'ibrahim.abubakar@example.com', 'occupation' => 'Civil Servant',
+                'address' => 'Gwange Ward, Maiduguri', 'city' => 'Maiduguri', 'state' => 'Borno', 'religion' => 'Islam',
+                'male' => ['Usman', 'Musa', 'Yusuf'], 'female' => ['Aisha', 'Fatima', 'Maryam'],
+                'primary_male' => ['Nasir', 'Mustapha', 'Hamza'], 'primary_female' => ['Jamila', 'Rukayya', 'Asma'],
+                'secondary_male' => ['Abdullahi', 'Suleiman', 'Nura'], 'secondary_female' => ['Zulaihat', 'Fadila', 'Sumayya'],
+            ],
+            [
+                'guardian' => 'Hajiya Zainab Bello', 'surname' => 'Bello', 'middle' => 'Sani', 'relationship' => 'mother',
+                'phone' => '+2348011100012', 'email' => 'zainab.bello@example.com', 'occupation' => 'Textile Trader',
+                'address' => 'Tarauni, Kano', 'city' => 'Kano', 'state' => 'Kano', 'religion' => 'Islam',
+                'male' => ['Sani', 'Kabiru', 'Danjuma'], 'female' => ['Zainab', 'Hauwa', 'Khadija'],
+                'primary_male' => ['Farouk', 'Mansur', 'Dawud'], 'primary_female' => ['Saadatu', 'Nafisa', 'Lantana'],
+                'secondary_male' => ['Iliyasu', 'Mukhtar', 'Tijjani'], 'secondary_female' => ['Aminatu', 'Hafsat', 'Kaltume'],
+            ],
+            [
+                'guardian' => 'Alhaji Musa Lawal', 'surname' => 'Lawal', 'middle' => 'Musa', 'relationship' => 'father',
+                'phone' => '+2348011100013', 'email' => 'musa.lawal@example.com', 'occupation' => 'Building Contractor',
+                'address' => 'Tudun Wada, Kaduna', 'city' => 'Kaduna', 'state' => 'Kaduna', 'religion' => 'Islam',
+                'male' => ['Aminu', 'Haruna', 'Salisu'], 'female' => ['Safiya', 'Rahma', 'Rabi'],
+                'primary_male' => ['Jibril', 'Ismail', 'Ridwan'], 'primary_female' => ['Maimuna', 'Farida', 'Sadiya'],
+                'secondary_male' => ['Yakubu', 'Sadiq', 'Hashim'], 'secondary_female' => ['Habiba', 'Khadija', 'Aisha'],
+            ],
+            [
+                'guardian' => 'Hajiya Hadiza Garba', 'surname' => 'Garba', 'middle' => 'Aliyu', 'relationship' => 'mother',
+                'phone' => '+2348011100014', 'email' => 'hadiza.garba@example.com', 'occupation' => 'Secondary School Teacher',
+                'address' => 'Nassarawa GRA, Katsina', 'city' => 'Katsina', 'state' => 'Katsina', 'religion' => 'Islam',
+                'male' => ['Aliyu', 'Bashir', 'Umar'], 'female' => ['Hadiza', 'Bilkisu', 'Halima'],
+                'primary_male' => ['Auwal', 'Mahmud', 'Nasiru'], 'primary_female' => ['Rashida', 'Falmata', 'Suhaila'],
+                'secondary_male' => ['Shehu', 'Balarabe', 'Gambo'], 'secondary_female' => ['Raihana', 'Amina', 'Mubina'],
+            ],
+            [
+                'guardian' => 'Alhaji Sada Isah', 'surname' => 'Isah', 'middle' => 'Sada', 'relationship' => 'father',
+                'phone' => '+2348011100015', 'email' => 'sada.isah@example.com', 'occupation' => 'Livestock Trader',
+                'address' => 'Runjin Sambo, Sokoto', 'city' => 'Sokoto', 'state' => 'Sokoto', 'religion' => 'Islam',
+                'male' => ['Bawa', 'Lawali', 'Sadauki'], 'female' => ['Rakiya', 'Ummi', 'Saudatu'],
+                'primary_male' => ['Kabiru', 'Nasiru', 'Sadiq'], 'primary_female' => ['Amina', 'Zulaihat', 'Hadiza'],
+                'secondary_male' => ['Aminu', 'Sulaiman', 'Yakubu'], 'secondary_female' => ['Khadija', 'Maryam', 'Fatima'],
+            ],
+            [
+                'guardian' => 'Hajiya Ladi Sulaiman', 'surname' => 'Sulaiman', 'middle' => 'Bala', 'relationship' => 'mother',
+                'phone' => '+2348011100016', 'email' => 'ladi.sulaiman@example.com', 'occupation' => 'Grain Merchant',
+                'address' => 'Sabon Gari, Gusau', 'city' => 'Gusau', 'state' => 'Zamfara', 'religion' => 'Islam',
+                'male' => ['Bala', 'Shehu', 'Isyaku'], 'female' => ['Larai', 'Talatu', 'Jummai'],
+                'primary_male' => ['Murtala', 'Tanko', 'Idris'], 'primary_female' => ['Sadiya', 'Balkisu', 'Ramatu'],
+                'secondary_male' => ['Nasir', 'Shamsuddeen', 'Abdulkadir'], 'secondary_female' => ['Firdausi', 'Amina', 'Zainab'],
+            ],
+            [
+                'guardian' => 'Mallam Modu Grema', 'surname' => 'Grema', 'middle' => 'Modu', 'relationship' => 'father',
+                'phone' => '+2348011100017', 'email' => 'modu.grema@example.com', 'occupation' => 'Fish Trader',
+                'address' => 'Old Market Road, Damaturu', 'city' => 'Damaturu', 'state' => 'Yobe', 'religion' => 'Islam',
+                'male' => ['Modu', 'Kaka', 'Bukar'], 'female' => ['Yagana', 'Falmata', 'Fannami'],
+                'primary_male' => ['Zanna', 'Mustapha', 'Baba'], 'primary_female' => ['Aisha', 'Zara', 'Hauwa'],
+                'secondary_male' => ['Goni', 'Ibrahim', 'Umar'], 'secondary_female' => ['Maryam', 'Fatima', 'Zainab'],
+            ],
+            [
+                'guardian' => 'Hajiya Salamatu Yahaya', 'surname' => 'Yahaya', 'middle' => 'Yusuf', 'relationship' => 'mother',
+                'phone' => '+2348011100018', 'email' => 'salamatu.yahaya@example.com', 'occupation' => 'Local Government Staff',
+                'address' => 'Tunga Low Cost, Minna', 'city' => 'Minna', 'state' => 'Niger', 'religion' => 'Islam',
+                'male' => ['Yusuf', 'Ndagi', 'Sadiku'], 'female' => ['Adama', 'Rakiya', 'Halima'],
+                'primary_male' => ['Ndanusa', 'Umaru', 'Ibrahim'], 'primary_female' => ['Salamatu', 'Aisha', 'Fatima'],
+                'secondary_male' => ['Suleiman', 'Yakubu', 'Musa'], 'secondary_female' => ['Zainab', 'Maryam', 'Hauwa'],
+            ],
+            [
+                'guardian' => 'Mr Davou Gyang', 'surname' => 'Gyang', 'middle' => 'Davou', 'relationship' => 'father',
+                'phone' => '+2348011100019', 'email' => 'davou.gyang@example.com', 'occupation' => 'Agricultural Extension Officer',
+                'address' => 'Rayfield, Jos', 'city' => 'Jos', 'state' => 'Plateau', 'religion' => 'Christianity',
+                'male' => ['Davou', 'Dachung', 'Nanle'], 'female' => ['Comfort', 'Dorcas', 'Mwanret'],
+                'primary_male' => ['Bot', 'Danladi', 'Choji'], 'primary_female' => ['Patience', 'Rhoda', 'Nanpon'],
+                'secondary_male' => ['Solomon', 'Timothy', 'Yilkes'], 'secondary_female' => ['Deborah', 'Grace', 'Mercy'],
+            ],
+            [
+                'guardian' => 'Mrs Naomi Vandi', 'surname' => 'Vandi', 'middle' => 'Yakubu', 'relationship' => 'mother',
+                'phone' => '+2348011100020', 'email' => 'naomi.vandi@example.com', 'occupation' => 'Bank Officer',
+                'address' => 'Jimeta, Yola', 'city' => 'Yola', 'state' => 'Adamawa', 'religion' => 'Christianity',
+                'male' => ['Yakubu', 'Bulus', 'Filibus'], 'female' => ['Naomi', 'Ruth', 'Suzan'],
+                'primary_male' => ['Emmanuel', 'Nathan', 'Daniel'], 'primary_female' => ['Esther', 'Blessing', 'Joy'],
+                'secondary_male' => ['Peter', 'James', 'Andrew'], 'secondary_female' => ['Sarah', 'Rebecca', 'Miriam'],
+            ],
         ];
     }
 

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[Fillable(['school_id', 'bank_name', 'account_name', 'account_number', 'branch', 'opening_balance', 'is_default', 'is_active', 'notes'])]
 class BankAccount extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected function casts(): array

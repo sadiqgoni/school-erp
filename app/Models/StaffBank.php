@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 #[Fillable(['school_id', 'name', 'code', 'is_active', 'notes'])]
 class StaffBank extends Model
 {
+    use Concerns\BelongsToSchool;
     use HasFactory;
 
     protected static function booted(): void
