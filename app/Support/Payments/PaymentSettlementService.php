@@ -40,6 +40,39 @@ class PaymentSettlementService
         );
     }
 
+    public function settleMonnifyTransaction(array $transaction): ?FeePayment
+    {
+        if (($transaction['paymentStatus'] ?? null) !== 'PAID') {
+            return null;
+        }
+
+        $reference = (string) ($transaction['paymentReference'] ?? '');
+
+        if (blank($reference)) {
+            return null;
+        }
+
+        return $this->settleSuccessfulTransaction(
+            provider: 'monnify',
+            reference: $reference,
+            // Monnify amounts are already whole Naira (no kobo conversion,
+            // unlike Paystack) — the init-transaction request sent it that way too.
+            amount: (float) ($transaction['amountPaid'] ?? 0),
+            payload: $transaction,
+            providerTransactionId: (string) ($transaction['transactionReference'] ?? ''),
+            payer: data_get($transaction, 'customer.email'),
+            paymentDate: filled($transaction['paidOn'] ?? null)
+                ? (string) $transaction['paidOn']
+                : now()->toDateString(),
+            notes: 'Monnify online payment',
+            metadata: array_filter([
+                'provider_transaction_id' => $transaction['transactionReference'] ?? null,
+                'paid_at' => $transaction['paidOn'] ?? null,
+                'channel' => $transaction['paymentMethod'] ?? null,
+            ]),
+        );
+    }
+
     public function settleSimulatedTransaction(string $reference, array $payload = []): ?FeePayment
     {
         $channel = (string) ($payload['channel'] ?? $payload['payment_method'] ?? 'card');

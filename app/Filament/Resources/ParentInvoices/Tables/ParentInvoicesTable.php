@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\ParentInvoices\Tables;
 
+use App\Models\Student;
 use App\Models\StudentInvoice;
-use App\Support\Payments\PaystackGateway;
+use App\Support\Payments\MonnifyGateway;
 use App\Support\Payments\PaymentInitialization;
+use App\Support\Payments\PaystackGateway;
 use App\Support\Payments\SimulatedPaymentGateway;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
@@ -143,6 +145,7 @@ class ParentInvoicesTable
     {
         return match (config('services.payments.default', 'simulated')) {
             'paystack' => app(PaystackGateway::class)->initialize($invoice),
+            'monnify' => app(MonnifyGateway::class)->initialize($invoice),
             default => app(SimulatedPaymentGateway::class)->initialize($invoice),
         };
     }
@@ -152,7 +155,7 @@ class ParentInvoicesTable
         $userId = Filament::auth()->id();
         $tenant = Filament::getTenant();
 
-        return \App\Models\Student::query()
+        return Student::query()
             ->where('school_id', $tenant?->getKey())
             ->whereHas('guardianLinks.guardian', fn (Builder $query) => $query->where('user_id', $userId))
             ->orderBy('first_name')

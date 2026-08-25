@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\DeviceEventController;
+use App\Http\Controllers\MonnifyPaymentCallbackController;
+use App\Http\Controllers\MonnifyWebhookController;
 use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\PaystackPaymentCallbackController;
 use App\Http\Controllers\PaystackWebhookController;
@@ -33,6 +35,12 @@ Route::get('/payments/paystack/callback', PaystackPaymentCallbackController::cla
 
 Route::post('/payments/paystack/webhook', PaystackWebhookController::class)
     ->name('payments.paystack.webhook');
+
+Route::get('/payments/monnify/callback', MonnifyPaymentCallbackController::class)
+    ->name('payments.monnify.callback');
+
+Route::post('/payments/monnify/webhook', MonnifyWebhookController::class)
+    ->name('payments.monnify.webhook');
 
 Route::post('/devices/events', DeviceEventController::class)
     ->name('devices.events');
