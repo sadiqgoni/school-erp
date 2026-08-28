@@ -52,7 +52,7 @@ class ClassroomModulesTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/homework')
+            ->get($this->portalUrl('demo-international-school', '/homework'))
             ->assertOk()
             ->assertSeeText('Read pages 10 to 15');
 
@@ -84,7 +84,7 @@ class ClassroomModulesTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/homework')
+            ->get($this->portalUrl('demo-international-school', '/homework'))
             ->assertOk()
             ->assertDontSeeText('Secret draft homework');
     }
@@ -105,7 +105,7 @@ class ClassroomModulesTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/parent-timetable')
+            ->get($this->portalUrl('demo-international-school', '/parent-timetable'))
             ->assertOk()
             ->assertSeeText('Morning Mathematics Lesson');
     }
@@ -134,7 +134,7 @@ class ClassroomModulesTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/parent-notices')
+            ->get($this->portalUrl('demo-international-school', '/parent-notices'))
             ->assertOk()
             ->assertSeeText('Resumption date announcement')
             ->assertDontSeeText('Hidden division-only memo');

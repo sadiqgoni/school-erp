@@ -37,6 +37,7 @@ class SchoolPanelProvider extends PanelProvider
         return $panel
             ->id('school')
             ->path('portal')
+            ->tenantDomain('{tenant}.'.config('app.central_domain'))
             ->brandName('School Dice')
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
             ->brandLogoHeight('75px')

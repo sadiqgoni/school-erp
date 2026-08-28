@@ -11,7 +11,7 @@
                     <h3 class="text-base font-semibold text-slate-950 dark:text-white">{{ $section['label'] }}</h3>
                     <p class="text-sm text-slate-500 dark:text-slate-400">
                         {{ $divisionSchool->code }} ·
-                        <a href="{{ url('/portal/'.$divisionSchool->slug) }}" target="_blank" class="text-primary-600 hover:underline dark:text-primary-400">
+                        <a href="{{ $divisionSchool->portalUrl() }}" target="_blank" class="text-primary-600 hover:underline dark:text-primary-400">
                             Open portal
                         </a>
                     </p>

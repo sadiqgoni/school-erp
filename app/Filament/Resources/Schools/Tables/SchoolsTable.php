@@ -55,7 +55,7 @@ class SchoolsTable
                     ->sortable(),
                 TextColumn::make('slug')
                     ->label('Portal URL')
-                    ->state(fn (School $record): string => '/portal/'.$record->portalSchool()->slug)
+                    ->state(fn (School $record): string => $record->portalUrl())
                     ->copyable()
                     ->copyMessage('Portal URL copied')
                     ->toggleable(),

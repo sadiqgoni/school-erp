@@ -89,7 +89,7 @@ class SchoolResource extends Resource
                                     ->color('primary'),
                                 TextEntry::make('slug')
                                     ->label('Portal link')
-                                    ->state(fn (School $record): string => url("/portal/{$record->slug}"))
+                                    ->state(fn (School $record): string => $record->portalUrl())
                                     ->copyable()
                                     ->copyMessage('Portal link copied'),
                             ])

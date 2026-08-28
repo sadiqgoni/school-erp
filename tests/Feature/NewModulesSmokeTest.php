@@ -17,16 +17,16 @@ class NewModulesSmokeTest extends TestCase
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
 
         foreach ([
-            '/portal/demo-international-school/assignments',
-            '/portal/demo-international-school/timetable-entries',
-            '/portal/demo-international-school/notices',
-            '/portal/demo-international-school/class-timetable',
-            '/portal/demo-international-school/fee-debtors',
-            '/portal/demo-international-school/student-devices',
-            '/portal/demo-international-school/bus-routes',
-            '/portal/demo-international-school/student-movements',
-            '/portal/demo-international-school/enrollments',
-            '/portal/demo-international-school/student-discounts',
+            $this->portalUrl('demo-international-school', '/assignments'),
+            $this->portalUrl('demo-international-school', '/timetable-entries'),
+            $this->portalUrl('demo-international-school', '/notices'),
+            $this->portalUrl('demo-international-school', '/class-timetable'),
+            $this->portalUrl('demo-international-school', '/fee-debtors'),
+            $this->portalUrl('demo-international-school', '/student-devices'),
+            $this->portalUrl('demo-international-school', '/bus-routes'),
+            $this->portalUrl('demo-international-school', '/student-movements'),
+            $this->portalUrl('demo-international-school', '/enrollments'),
+            $this->portalUrl('demo-international-school', '/student-discounts'),
         ] as $path) {
             $this
                 ->actingAs($admin)
@@ -42,14 +42,14 @@ class NewModulesSmokeTest extends TestCase
         $admin = User::query()->where('email', 'admin@example.com')->firstOrFail();
 
         foreach ([
-            '/portal/demo-international-school/assignments',
-            '/portal/demo-international-school/timetable-entries',
-            '/portal/demo-international-school/notices',
-            '/portal/demo-international-school/student-discounts',
-            '/portal/demo-international-school/fee-debtors',
-            '/portal/demo-international-school/student-invoices',
-            '/portal/demo-international-school/fee-payments',
-            '/portal/demo-international-school/fee-structures',
+            $this->portalUrl('demo-international-school', '/assignments'),
+            $this->portalUrl('demo-international-school', '/timetable-entries'),
+            $this->portalUrl('demo-international-school', '/notices'),
+            $this->portalUrl('demo-international-school', '/student-discounts'),
+            $this->portalUrl('demo-international-school', '/fee-debtors'),
+            $this->portalUrl('demo-international-school', '/student-invoices'),
+            $this->portalUrl('demo-international-school', '/fee-payments'),
+            $this->portalUrl('demo-international-school', '/fee-structures'),
         ] as $path) {
             $this
                 ->actingAs($admin)

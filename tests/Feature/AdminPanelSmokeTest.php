@@ -77,15 +77,15 @@ class AdminPanelSmokeTest extends TestCase
         $student = Student::query()->where('school_id', $school->getKey())->firstOrFail();
 
         foreach ([
-            "/portal/{$tenantSlug}",
-            "/portal/{$tenantSlug}/school-classes",
-            "/portal/{$tenantSlug}/students",
-            "/portal/{$tenantSlug}/students/{$student->getKey()}",
-            "/portal/{$tenantSlug}/staff",
-            "/portal/{$tenantSlug}/staff/{$staff->getKey()}",
-            "/portal/{$tenantSlug}/users",
-            "/portal/{$tenantSlug}/student-invoices",
-            "/portal/{$tenantSlug}/exams",
+            $this->portalUrl($tenantSlug),
+            $this->portalUrl($tenantSlug, '/school-classes'),
+            $this->portalUrl($tenantSlug, '/students'),
+            $this->portalUrl($tenantSlug, "/students/{$student->getKey()}"),
+            $this->portalUrl($tenantSlug, '/staff'),
+            $this->portalUrl($tenantSlug, "/staff/{$staff->getKey()}"),
+            $this->portalUrl($tenantSlug, '/users'),
+            $this->portalUrl($tenantSlug, '/student-invoices'),
+            $this->portalUrl($tenantSlug, '/exams'),
         ] as $path) {
             $this
                 ->actingAs($schoolAdmin)
@@ -95,12 +95,12 @@ class AdminPanelSmokeTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$tenantSlug}/profile")
+            ->get($this->portalUrl($tenantSlug, '/profile'))
             ->assertNotFound();
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$tenantSlug}/schools")
+            ->get($this->portalUrl($tenantSlug, '/schools'))
             ->assertForbidden();
     }
 
@@ -113,7 +113,7 @@ class AdminPanelSmokeTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$tenantSlug}/students?search=Aisha")
+            ->get($this->portalUrl($tenantSlug, '/students?search=Aisha'))
             ->assertOk()
             ->assertSee('Aisha');
     }
@@ -164,7 +164,7 @@ class AdminPanelSmokeTest extends TestCase
 
         $this
             ->actingAs($superadmin)
-            ->get("/portal/{$blockedSchool->slug}")
+            ->get($this->portalUrl($blockedSchool->slug))
             ->assertOk();
     }
 
@@ -182,7 +182,7 @@ class AdminPanelSmokeTest extends TestCase
             $this
                 ->actingAs($schoolAdmin)
                 ->get($path)
-                ->assertRedirect("/portal/{$tenantSlug}");
+                ->assertRedirect($this->portalUrl($tenantSlug));
         }
     }
 
@@ -224,13 +224,13 @@ class AdminPanelSmokeTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$school->slug}")
+            ->get($this->portalUrl($school->slug))
             ->assertOk();
 
         $this
             ->actingAs($schoolAdmin)
             ->get('/admin')
-            ->assertRedirect("/portal/{$school->slug}");
+            ->assertRedirect($this->portalUrl($school->slug));
     }
 
     public function test_admin_registration_is_closed_once_a_user_exists(): void
@@ -356,13 +356,13 @@ class AdminPanelSmokeTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$tenantSlug}/academic-years/create")
+            ->get($this->portalUrl($tenantSlug, '/academic-years/create'))
             ->assertOk()
             ->assertDontSee('name="data.school_id"', escape: false);
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$tenantSlug}/terms/create")
+            ->get($this->portalUrl($tenantSlug, '/terms/create'))
             ->assertOk()
             ->assertDontSee('name="data.position"', escape: false);
     }
@@ -396,10 +396,10 @@ class AdminPanelSmokeTest extends TestCase
             ->update(['user_id' => $teacher->getKey(), 'staff_type' => Staff::TYPE_TEACHING]);
 
         foreach ([
-            "/portal/{$tenantSlug}/my-teaching",
-            "/portal/{$tenantSlug}/class-subjects",
-            "/portal/{$tenantSlug}/student-scores",
-            "/portal/{$tenantSlug}/report-cards",
+            $this->portalUrl($tenantSlug, '/my-teaching'),
+            $this->portalUrl($tenantSlug, '/class-subjects'),
+            $this->portalUrl($tenantSlug, '/student-scores'),
+            $this->portalUrl($tenantSlug, '/report-cards'),
         ] as $path) {
             $this
                 ->actingAs($teacher)
@@ -408,11 +408,11 @@ class AdminPanelSmokeTest extends TestCase
         }
 
         foreach ([
-            "/portal/{$tenantSlug}/staff",
-            "/portal/{$tenantSlug}/students",
-            "/portal/{$tenantSlug}/school-classes",
-            "/portal/{$tenantSlug}/fee-types",
-            "/portal/{$tenantSlug}/student-invoices",
+            $this->portalUrl($tenantSlug, '/staff'),
+            $this->portalUrl($tenantSlug, '/students'),
+            $this->portalUrl($tenantSlug, '/school-classes'),
+            $this->portalUrl($tenantSlug, '/fee-types'),
+            $this->portalUrl($tenantSlug, '/student-invoices'),
         ] as $path) {
             $this
                 ->actingAs($teacher)

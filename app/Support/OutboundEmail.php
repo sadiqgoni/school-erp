@@ -238,7 +238,14 @@ class OutboundEmail
 
     protected function portalUrl(?string $slug, string $path): ?string
     {
-        return $slug ? url("/portal/{$slug}/{$path}") : null;
+        if (! $slug) {
+            return null;
+        }
+
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $domain = config('app.central_domain');
+
+        return "{$scheme}://{$slug}.{$domain}/portal/{$path}";
     }
 
     protected function subjectForReminder(Reminder $reminder): string

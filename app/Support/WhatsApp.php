@@ -98,7 +98,7 @@ class WhatsApp
             number_format((float) $invoice->amount_paid, 2),
             number_format((float) $invoice->balance, 2),
             $invoice->due_date ? "\nDue date: ".$invoice->due_date->format('d M Y') : '',
-            self::portalUrl($school?->slug),
+            $school?->portalUrl() ?? url('/'),
         );
 
         return self::link($guardian->phone, $message);
@@ -132,10 +132,5 @@ class WhatsApp
         );
 
         return self::link($guardian->phone, $message);
-    }
-
-    protected static function portalUrl(?string $schoolSlug): string
-    {
-        return $schoolSlug ? url('/portal/'.$schoolSlug) : url('/portal');
     }
 }

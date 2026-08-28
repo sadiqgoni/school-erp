@@ -24,7 +24,7 @@ class RedirectSchoolUserFromAdmin
             && $request->is('admin', 'admin/*')
             && ($school = $user->getDefaultTenant(Filament::getCurrentOrDefaultPanel()))
         ) {
-            return redirect()->to(url("/portal/{$school->slug}"));
+            return redirect()->to($school->portalUrl());
         }
 
         return $next($request);

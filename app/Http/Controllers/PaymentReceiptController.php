@@ -22,9 +22,7 @@ class PaymentReceiptController extends Controller
             'invoice' => $invoice,
             'payment' => $invoice->payments->firstWhere('reference', $reference) ?? $invoice->payments->first(),
             'status' => (string) $request->query('status', $invoice->payment_status),
-            'portalUrl' => $invoice->school?->slug
-                ? url("/portal/{$invoice->school->slug}/parent-invoices")
-                : null,
+            'portalUrl' => $invoice->school?->portalUrl('/parent-invoices'),
         ]);
     }
 }

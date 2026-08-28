@@ -57,26 +57,26 @@ class TenantIsolationTest extends TestCase
         // Table listings must not leak the rival school's rows.
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$slug}/students")
+            ->get($this->portalUrl($slug, '/students'))
             ->assertOk()
             ->assertDontSeeText('Zebulon');
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$slug}/school-classes")
+            ->get($this->portalUrl($slug, '/school-classes'))
             ->assertOk()
             ->assertDontSeeText('Zebra Leak Class');
 
         // Form dropdown options (raw Model::query() closures) must not leak either.
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$slug}/assignments/create")
+            ->get($this->portalUrl($slug, '/assignments/create'))
             ->assertOk()
             ->assertDontSeeText('Zebra Leak Class');
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$slug}/student-devices/create")
+            ->get($this->portalUrl($slug, '/student-devices/create'))
             ->assertOk()
             ->assertDontSeeText('Zebulon');
     }

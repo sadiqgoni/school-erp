@@ -41,9 +41,9 @@ class PlatformAdminToolsTest extends TestCase
         $tenantSlug = $schoolAdmin->schools()->value('slug');
 
         foreach ([
-            "/portal/{$tenantSlug}/user-activities",
-            "/portal/{$tenantSlug}/communication-logs",
-            "/portal/{$tenantSlug}/school-health",
+            $this->portalUrl($tenantSlug, '/user-activities'),
+            $this->portalUrl($tenantSlug, '/communication-logs'),
+            $this->portalUrl($tenantSlug, '/school-health'),
         ] as $path) {
             $this
                 ->actingAs($schoolAdmin)

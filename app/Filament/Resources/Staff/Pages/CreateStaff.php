@@ -94,7 +94,7 @@ class CreateStaff extends CreateRecord
                 name: $staff->full_name,
                 email: $email,
                 temporaryPassword: $temporaryPassword,
-                portalUrl: $school?->slug ? url('/portal/'.$school->slug) : url('/'),
+                portalUrl: $school?->portalUrl() ?? url('/'),
                 roleLabel: $staff->staff_type === Staff::TYPE_TEACHING ? 'teacher portal' : 'staff portal',
             ));
 

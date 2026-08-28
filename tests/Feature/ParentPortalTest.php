@@ -22,7 +22,7 @@ class ParentPortalTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/parent-portal')
+            ->get($this->portalUrl('demo-international-school', '/parent-portal'))
             ->assertOk()
             ->assertSee('Aisha Musa')
             ->assertSeeText('My Invoices')
@@ -31,7 +31,7 @@ class ParentPortalTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school')
+            ->get($this->portalUrl('demo-international-school'))
             ->assertOk()
             ->assertSeeText('Parent Workspace')
             ->assertDontSeeText('Admit Student')
@@ -39,20 +39,20 @@ class ParentPortalTest extends TestCase
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/parent-invoices')
+            ->get($this->portalUrl('demo-international-school', '/parent-invoices'))
             ->assertOk()
             ->assertSeeText('Aisha Musa')
             ->assertSeeText('INV-');
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/parent-report-cards')
+            ->get($this->portalUrl('demo-international-school', '/parent-report-cards'))
             ->assertOk()
             ->assertSeeText('My Results');
 
         $this
             ->actingAs($parent)
-            ->get('/portal/demo-international-school/students')
+            ->get($this->portalUrl('demo-international-school', '/students'))
             ->assertForbidden();
     }
 }

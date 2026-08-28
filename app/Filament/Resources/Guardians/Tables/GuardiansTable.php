@@ -131,7 +131,7 @@ class GuardiansTable
                 name: $guardian->name,
                 email: $user->email,
                 temporaryPassword: $temporaryPassword,
-                portalUrl: $school?->slug ? url('/portal/'.$school->slug) : url('/'),
+                portalUrl: $school?->portalUrl() ?? url('/'),
                 roleLabel: 'parent portal',
             ));
 

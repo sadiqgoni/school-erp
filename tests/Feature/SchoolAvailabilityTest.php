@@ -22,7 +22,7 @@ class SchoolAvailabilityTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$school->slug}")
+            ->get($this->portalUrl($school->slug))
             ->assertForbidden();
     }
 
@@ -37,7 +37,7 @@ class SchoolAvailabilityTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$school->slug}")
+            ->get($this->portalUrl($school->slug))
             ->assertForbidden();
     }
 
@@ -59,7 +59,7 @@ class SchoolAvailabilityTest extends TestCase
 
         $this
             ->actingAs($superadmin)
-            ->get("/portal/{$school->slug}")
+            ->get($this->portalUrl($school->slug))
             ->assertOk();
     }
 
@@ -74,7 +74,7 @@ class SchoolAvailabilityTest extends TestCase
 
         $this
             ->actingAs($schoolAdmin)
-            ->get("/portal/{$school->slug}")
+            ->get($this->portalUrl($school->slug))
             ->assertOk();
     }
 }

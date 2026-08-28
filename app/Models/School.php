@@ -301,9 +301,13 @@ class School extends Model implements HasAvatar, HasName
         });
     }
 
-    public function portalUrl(): string
+    public function portalUrl(string $path = ''): string
     {
-        return url('/portal/'.$this->portalSchool()->slug);
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $slug = $this->portalSchool()->slug;
+        $domain = config('app.central_domain');
+
+        return "{$scheme}://{$slug}.{$domain}/portal".$path;
     }
 
     protected function softDeleteRecoverableSchoolRecords(): void

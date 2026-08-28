@@ -529,7 +529,7 @@ class StaffTable
                 name: $staff->full_name,
                 email: $email,
                 temporaryPassword: $temporaryPassword,
-                portalUrl: $school?->slug ? url('/portal/'.$school->slug) : url('/'),
+                portalUrl: $school?->portalUrl() ?? url('/'),
                 roleLabel: match ($role) {
                     User::SCHOOL_ROLE_TEACHER => 'teacher portal',
                     User::SCHOOL_ROLE_FINANCE => 'finance portal',

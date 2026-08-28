@@ -56,6 +56,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Central Domain
+    |--------------------------------------------------------------------------
+    |
+    | The bare domain that each school's portal subdomain is built on top of
+    | (e.g. "ndsl.com.ng" so a school with slug "greenfield" is served at
+    | greenfield.ndsl.com.ng). Requires a wildcard DNS record and a wildcard
+    | SSL certificate for *.{this domain}.
+    |
+    */
+
+    'central_domain' => env('CENTRAL_DOMAIN', 'localhost'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
