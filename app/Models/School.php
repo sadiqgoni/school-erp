@@ -353,7 +353,7 @@ class School extends Model implements HasAvatar, HasName
     protected function slug(): Attribute
     {
         return Attribute::make(
-            set: fn (?string $value, array $attributes) => $value ?: Str::slug($attributes['name'] ?? ''),
+            set: fn (?string $value, array $attributes) => Str::slug($value ?: ($attributes['name'] ?? '')),
         );
     }
 }
