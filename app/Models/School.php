@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CurrentDivision;
 use Filament\Facades\Filament;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
@@ -15,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 #[Fillable([
@@ -60,11 +62,18 @@ class School extends Model implements HasAvatar, HasName
             $panel = Filament::getCurrentPanel();
             $tenant = Filament::getTenant();
 
+            // No tenant resolved yet means this query IS Filament's own
+            // tenant-resolution lookup (or something running before it) —
+            // must stay unscoped, or that lookup can never find anything.
             if (($panel?->getId() !== 'school') || (! $tenant)) {
                 return;
             }
 
-            $query->whereKey($tenant);
+            // The Filament tenant is the parent/client school; the row a
+            // school-panel request is actually scoped to is whichever
+            // division the user has selected for this session. No division
+            // resolved yet means no rows — never fall back to "all rows".
+            $query->whereKey(CurrentDivision::get()?->getKey());
         });
 
         static::deleting(function (School $school): void {
@@ -301,13 +310,37 @@ class School extends Model implements HasAvatar, HasName
         });
     }
 
-    public function portalUrl(string $path = ''): string
+    /**
+     * The subdomain now covers a whole client school, all its divisions
+     * included — so a link generated with a specific division in mind (a
+     * parent-notification email, a staff/guardian credential email) needs a
+     * way to land the visitor directly in that division's context rather
+     * than the division picker. $withDivisionHint routes the link through a
+     * signed landing URL (PortalDivisionLinkController) that pre-seeds the
+     * division into session before handing off to the portal proper; pass
+     * false only when the caller genuinely wants the bare subdomain root
+     * (e.g. displaying the URL itself in an admin table).
+     */
+    public function portalUrl(string $path = '', bool $withDivisionHint = true): string
     {
-        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
-        $slug = $this->portalSchool()->slug;
-        $domain = config('app.central_domain');
+        $division = $this->portalSchool();
+        $parent = $division->parent_school_id
+            ? self::query()->withoutGlobalScope('school-panel-current-tenant')->find($division->parent_school_id)
+            : $division;
 
-        return "{$scheme}://{$slug}.{$domain}/portal".$path;
+        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $domain = config('app.central_domain');
+        $baseUrl = "{$scheme}://{$parent->slug}.{$domain}/portal".$path;
+
+        if (! $withDivisionHint || $parent->getKey() === $division->getKey()) {
+            return $baseUrl;
+        }
+
+        return URL::signedRoute('portal.division-hint', [
+            'school' => $parent->getKey(),
+            'division' => $division->getKey(),
+            'redirect' => $path,
+        ]);
     }
 
     protected function softDeleteRecoverableSchoolRecords(): void

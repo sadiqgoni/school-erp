@@ -6,6 +6,7 @@ use App\Http\Controllers\MonnifyWebhookController;
 use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\PaystackPaymentCallbackController;
 use App\Http\Controllers\PaystackWebhookController;
+use App\Http\Controllers\PortalDivisionLinkController;
 use App\Http\Controllers\ReportCardPdfController;
 use App\Http\Controllers\SalaryMonthReportPdfController;
 use App\Http\Controllers\SalaryPostingPdfController;
@@ -47,6 +48,9 @@ Route::post('/devices/events', DeviceEventController::class)
 
 Route::get('/payments/receipt', PaymentReceiptController::class)
     ->name('payments.receipt');
+
+Route::get('/portal/division-hint', PortalDivisionLinkController::class)
+    ->name('portal.division-hint');
 
 Route::get('/payments/checkout', [SimulatedPaymentCheckoutController::class, 'show'])
     ->name('payments.checkout');

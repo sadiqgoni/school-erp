@@ -62,7 +62,10 @@ return [
     | The bare domain that each school's portal subdomain is built on top of
     | (e.g. "ndsl.com.ng" so a school with slug "greenfield" is served at
     | greenfield.ndsl.com.ng). Requires a wildcard DNS record and a wildcard
-    | SSL certificate for *.{this domain}.
+    | SSL certificate for *.{this domain}. Also the only domain the platform
+    | admin panel (/admin) is reachable on — it must match APP_URL's host
+    | (a real hostname, not a bare IP — IPs can't have subdomains), or plain
+    | (non-tenant) requests won't match either domain restriction.
     |
     */
 

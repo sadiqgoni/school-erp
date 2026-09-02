@@ -100,7 +100,7 @@ class OutboundEmail
             body: $notice->body ?: 'A new notice has been published on the parent portal.',
             metadata: [
                 'category' => $notice->category,
-                'portal_url' => $this->portalUrl($notice->school?->slug, 'parent-notices'),
+                'portal_url' => $notice->school?->portalUrl('/parent-notices'),
             ],
         );
     }
@@ -129,7 +129,7 @@ class OutboundEmail
             body: $body,
             metadata: [
                 'due_on' => $assignment->due_on?->toDateString(),
-                'portal_url' => $this->portalUrl($assignment->school?->slug, 'parent-assignments'),
+                'portal_url' => $assignment->school?->portalUrl('/parent-assignments'),
             ],
         );
     }
@@ -153,7 +153,7 @@ class OutboundEmail
             subject: 'Report card published',
             body: $body,
             metadata: [
-                'portal_url' => $this->portalUrl($reportCard->school?->slug, 'parent-report-cards'),
+                'portal_url' => $reportCard->school?->portalUrl('/parent-report-cards'),
             ],
         );
     }
@@ -175,7 +175,7 @@ class OutboundEmail
             metadata: [
                 'event_type' => $movement->event_type,
                 'happened_at' => $movement->happened_at?->toIso8601String(),
-                'portal_url' => $this->portalUrl($movement->school?->slug, 'parent-whereabouts'),
+                'portal_url' => $movement->school?->portalUrl('/parent-whereabouts'),
             ],
         );
     }
@@ -234,18 +234,6 @@ class OutboundEmail
                 ->map(fn ($link) => $link->guardian)
                 ->filter())
             ->values();
-    }
-
-    protected function portalUrl(?string $slug, string $path): ?string
-    {
-        if (! $slug) {
-            return null;
-        }
-
-        $scheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
-        $domain = config('app.central_domain');
-
-        return "{$scheme}://{$slug}.{$domain}/portal/{$path}";
     }
 
     protected function subjectForReminder(Reminder $reminder): string

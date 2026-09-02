@@ -56,7 +56,7 @@ class CreateSchool extends CreateRecord
                 'name' => $adminName,
                 'email' => $adminEmail,
                 'password' => $adminPassword,
-                'portal' => $divisionSchools->first()->portalUrl(),
+                'portal' => $school->portalUrl(),
             ];
 
             return $school;

@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Notifications\PasswordChangedNotification;
 use App\Notifications\PasswordResetNotification;
+use App\Support\CurrentDivision;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasDefaultTenant;
@@ -145,42 +146,41 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
                 : $this->schools()->withoutGlobalScope('school-panel-current-tenant')->get();
         }
 
-        if ($this->isSuperAdmin()) {
-            return School::query()
-                ->withoutGlobalScope('school-panel-current-tenant')
-                ->portalWorkspaces()
-                ->orderByDesc('is_active')
-                ->orderBy('name')
-                ->get();
-        }
-
-        return School::query()
-            ->withoutGlobalScope('school-panel-current-tenant')
-            ->portalWorkspaces()
-            ->where(function (Builder $query): void {
-                $query
-                    ->whereHas('users', fn (Builder $query) => $query
-                        ->whereKey($this->getKey())
-                        ->where('school_user.role', '!=', self::SCHOOL_ROLE_PARENT))
-                    ->orWhereHas('guardians', fn (Builder $query) => $query
-                        ->where('user_id', $this->getKey())
-                        ->where('is_active', true)
-                        ->whereHas('studentLinks.student'));
-            })
-            ->orderByDesc('is_active')
-            ->orderBy('name')
-            ->get();
+        // The Filament tenant is the parent/client school; a user's actual
+        // access is per-division (school_user pivot / Guardian links), so
+        // every accessible division gets mapped up to its parent here and
+        // deduplicated — a user with access to two divisions of the same
+        // client school sees that client once in the tenant switcher, with
+        // the division picker (App\Filament\Pages\SelectDivision) handling
+        // the rest once they're inside it.
+        return CurrentDivision::allAccessibleWorkspaces($this)
+            ->map(fn (School $division): ?School => $division->parent_school_id
+                ? School::query()->withoutGlobalScope('school-panel-current-tenant')->find($division->parent_school_id)
+                : $division)
+            ->filter()
+            ->unique('id')
+            ->sortBy([['is_active', 'desc'], ['name', 'asc']])
+            ->values();
     }
 
     public function getDefaultTenant(Panel $panel): ?Model
     {
         if ($panel->getId() === 'school') {
-            /** @var Collection<int, School> $tenants */
-            $tenants = collect($this->getTenants($panel));
-
-            return $tenants
-                ->sortByDesc(fn (School $school): int => (int) ($school->pivot?->is_primary ?? false))
+            $primaryDivision = $this->schools()
+                ->withoutGlobalScope('school-panel-current-tenant')
+                ->orderByDesc('school_user.is_primary')
+                ->orderBy('school_user.school_id')
                 ->first();
+
+            if ($primaryDivision) {
+                return $primaryDivision->parent_school_id
+                    ? School::query()->withoutGlobalScope('school-panel-current-tenant')->find($primaryDivision->parent_school_id)
+                    : $primaryDivision;
+            }
+
+            // Guardian-only users have no school_user pivot row at all —
+            // fall back to the first client school they can reach any way.
+            return collect($this->getTenants($panel))->first();
         }
 
         return $this->schools()
@@ -211,7 +211,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     public function canAccessTenant(Model $tenant): bool
     {
-        if (! $tenant instanceof School || ! $tenant->isPortalWorkspace()) {
+        if (! $tenant instanceof School) {
             return false;
         }
 
@@ -219,23 +219,14 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             return true;
         }
 
-        $role = $this->roleForSchool($tenant);
-
-        if ($role === self::SCHOOL_ROLE_PARENT || $role === null) {
-            return Guardian::query()
-                ->where('user_id', $this->getKey())
-                ->where('school_id', $tenant->getKey())
-                ->where('is_active', true)
-                ->whereHas('studentLinks.student')
-                ->exists();
-        }
-
-        return in_array($role, [
-            self::SCHOOL_ROLE_ADMIN,
-            self::SCHOOL_ROLE_TEACHER,
-            self::SCHOOL_ROLE_STAFF,
-            self::SCHOOL_ROLE_FINANCE,
-        ], true);
+        // Access to the tenant (the parent/client school) means having
+        // access to at least one division underneath it — works identically
+        // whether $tenant is itself a division (today) or a parent with
+        // children (post subdomain-consolidation), since availableFor()
+        // resolves "this row or its children" either way. Deliberately not
+        // using CurrentDivision::get() here — this check runs before any
+        // division could possibly be selected yet.
+        return CurrentDivision::availableFor($this, $tenant)->isNotEmpty();
     }
 
     public function roleForSchool(Model|int|null $school): ?string
