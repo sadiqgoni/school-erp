@@ -19,31 +19,28 @@ class DirectAdminSubdomainProvisioner
      */
     public static function ensure(string $slug): bool
     {
-        $host = config('services.directadmin.host');
         $username = config('services.directadmin.username');
         $loginKey = config('services.directadmin.login_key');
         $domain = config('services.directadmin.domain');
 
-        if (blank($host) || blank($username) || blank($loginKey) || blank($domain)) {
+        if (blank($username) || blank($loginKey) || blank($domain)) {
             return false;
         }
 
         $port = config('services.directadmin.port', 2222);
 
         try {
+            // The app runs on the same server as the DirectAdmin API, and
+            // this server can't route to its own public hostname/IP (no NAT
+            // hairpinning) — call it over loopback instead. The certificate
+            // is issued for the real hostname, not 127.0.0.1, so it can't be
+            // verified against this literal address; that's fine here since
+            // "loopback" already tells us exactly who we're talking to.
             $response = Http::withBasicAuth($username, $loginKey)
                 ->asForm()
+                ->withoutVerifying()
                 ->timeout(15)
-                // The app runs on the same server as the DirectAdmin API, and
-                // this server can't route to its own public hostname/IP (no
-                // NAT hairpinning) — force the connection over loopback while
-                // keeping the hostname for SNI/certificate verification.
-                ->withOptions([
-                    'curl' => [
-                        CURLOPT_RESOLVE => ["{$host}:{$port}:127.0.0.1"],
-                    ],
-                ])
-                ->post("https://{$host}:{$port}/CMD_API_SUBDOMAINS", [
+                ->post("https://127.0.0.1:{$port}/CMD_API_SUBDOMAINS", [
                     'action' => 'create',
                     'domain' => $domain,
                     'subdomain' => $slug,

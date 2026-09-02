@@ -60,7 +60,6 @@ return [
     ],
 
     'directadmin' => [
-        'host' => env('DIRECTADMIN_HOST'),
         'port' => env('DIRECTADMIN_PORT', 2222),
         'username' => env('DIRECTADMIN_USERNAME'),
         'login_key' => env('DIRECTADMIN_LOGIN_KEY'),
