@@ -11,7 +11,10 @@
 # Install with: crontab -e
 #   * * * * * /home/ndslcomn/domains/ndsl.com.ng/school-erp/deploy/provision-subdomains.sh >> /dev/null 2>&1
 
-set -euo pipefail
+# No -e: this loops over possibly several slugs per run, and a single
+# failed command (a bad curl, a symlink that can't be created) must not
+# abort the whole batch and silently drop the remaining queued slugs.
+set -uo pipefail
 
 APP_DIR="/home/ndslcomn/domains/ndsl.com.ng/school-erp"
 ENV_FILE="${APP_DIR}/.env"
@@ -31,7 +34,7 @@ PORT=${PORT:-2222}
 [ -n "$USERNAME" ] && [ -n "$LOGIN_KEY" ] && [ -n "$DOMAIN" ] || exit 0
 
 PROCESSING_FILE="${QUEUE_FILE}.processing.$$"
-mv "$QUEUE_FILE" "$PROCESSING_FILE"
+mv "$QUEUE_FILE" "$PROCESSING_FILE" || exit 0
 touch "$QUEUE_FILE"
 
 while IFS= read -r SLUG; do
@@ -41,9 +44,9 @@ while IFS= read -r SLUG; do
         --data-urlencode "action=create" \
         --data-urlencode "domain=${DOMAIN}" \
         --data-urlencode "subdomain=${SLUG}" \
-        "https://127.0.0.1:${PORT}/CMD_API_SUBDOMAINS")
+        "https://127.0.0.1:${PORT}/CMD_API_SUBDOMAINS") || RESPONSE=""
 
-    if echo "$RESPONSE" | grep -qi 'error=0\|exist'; then
+    if [ -n "$RESPONSE" ] && echo "$RESPONSE" | grep -qi 'error=0\|exist'; then
         DOCROOT="/home/${USERNAME}/domains/${SLUG}.${DOMAIN}/public_html"
 
         if [ -L "$DOCROOT" ] && [ "$(readlink "$DOCROOT")" = "$PUBLIC_DIR" ]; then
