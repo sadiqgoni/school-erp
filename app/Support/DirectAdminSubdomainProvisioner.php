@@ -48,10 +48,11 @@ class DirectAdminSubdomainProvisioner
         parse_str($response->body(), $result);
 
         $failed = ($result['error'] ?? '0') === '1';
-        $alreadyExists = str_contains(strtolower($result['text'] ?? ''), 'exist');
+        $message = ($result['text'] ?? '').' '.($result['details'] ?? '');
+        $alreadyExists = str_contains(strtolower($message), 'exist');
 
         if ($failed && ! $alreadyExists) {
-            Log::warning("DirectAdmin subdomain provisioning error for [{$slug}]: ".($result['text'] ?? $response->body()));
+            Log::warning("DirectAdmin subdomain provisioning error for [{$slug}]: ".trim($message ?: $response->body()));
 
             return false;
         }
