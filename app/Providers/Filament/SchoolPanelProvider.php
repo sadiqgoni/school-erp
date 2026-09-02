@@ -10,7 +10,6 @@ use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
 use App\Filament\Widgets\TeacherDashboard;
 use App\Http\Middleware\EnsureActiveUser;
-use App\Http\Middleware\EnsureDivisionSelected;
 use App\Http\Middleware\EnsureSchoolAvailable;
 use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
@@ -112,7 +111,6 @@ class SchoolPanelProvider extends PanelProvider
             // authMiddleware. Tenant-dependent checks must live here, not above.
             ->tenantMiddleware([
                 EnsureSchoolAvailable::class,
-                EnsureDivisionSelected::class,
             ], isPersistent: true);
     }
 }
