@@ -34,6 +34,15 @@ class DirectAdminSubdomainProvisioner
             $response = Http::withBasicAuth($username, $loginKey)
                 ->asForm()
                 ->timeout(15)
+                // The app runs on the same server as the DirectAdmin API, and
+                // this server can't route to its own public hostname/IP (no
+                // NAT hairpinning) — force the connection over loopback while
+                // keeping the hostname for SNI/certificate verification.
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_RESOLVE => ["{$host}:{$port}:127.0.0.1"],
+                    ],
+                ])
                 ->post("https://{$host}:{$port}/CMD_API_SUBDOMAINS", [
                     'action' => 'create',
                     'domain' => $domain,
