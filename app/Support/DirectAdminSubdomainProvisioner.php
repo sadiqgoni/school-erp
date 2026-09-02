@@ -3,8 +3,8 @@
 namespace App\Support;
 
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Symfony\Component\Process\Process;
 use Throwable;
 
 class DirectAdminSubdomainProvisioner
@@ -30,35 +30,43 @@ class DirectAdminSubdomainProvisioner
         $port = config('services.directadmin.port', 2222);
 
         try {
-            // The app runs on the same server as the DirectAdmin API, and
-            // this server can't route to its own public hostname/IP (no NAT
-            // hairpinning) — call it over loopback instead. The certificate
-            // is issued for the real hostname, not 127.0.0.1, so it can't be
-            // verified against this literal address; that's fine here since
-            // "loopback" already tells us exactly who we're talking to.
-            $response = Http::withBasicAuth($username, $loginKey)
-                ->asForm()
-                ->withoutVerifying()
-                ->timeout(15)
-                ->post("https://127.0.0.1:{$port}/CMD_API_SUBDOMAINS", [
-                    'action' => 'create',
-                    'domain' => $domain,
-                    'subdomain' => $slug,
-                ]);
+            // The app runs on the same server as the DirectAdmin API, but
+            // PHP's own curl extension can't reach it (times out on every
+            // route tried — real hostname, loopback, with/without cert
+            // verification), seemingly blocked at the process level by the
+            // host's hardening. The system `curl` binary reaches it over
+            // loopback instantly, so shell out to that instead.
+            $process = new Process([
+                'curl', '-sk', '-m', '15',
+                '-u', "{$username}:{$loginKey}",
+                '--data-urlencode', 'action=create',
+                '--data-urlencode', "domain={$domain}",
+                '--data-urlencode', "subdomain={$slug}",
+                "https://127.0.0.1:{$port}/CMD_API_SUBDOMAINS",
+            ]);
+            $process->run();
+
+            if (! $process->isSuccessful()) {
+                Log::warning("DirectAdmin subdomain provisioning failed for [{$slug}]: {$process->getErrorOutput()}");
+
+                return false;
+            }
+
+            $body = $process->getOutput();
         } catch (Throwable $exception) {
             Log::warning("DirectAdmin subdomain provisioning failed for [{$slug}]: {$exception->getMessage()}");
 
             return false;
         }
 
-        parse_str($response->body(), $result);
+        parse_str($body, $result);
 
         $failed = ($result['error'] ?? '0') === '1';
         $message = ($result['text'] ?? '').' '.($result['details'] ?? '');
         $alreadyExists = str_contains(strtolower($message), 'exist');
 
         if ($failed && ! $alreadyExists) {
-            Log::warning("DirectAdmin subdomain provisioning error for [{$slug}]: ".trim($message ?: $response->body()));
+            Log::warning("DirectAdmin subdomain provisioning error for [{$slug}]: ".trim($message ?: $body));
 
             return false;
         }
