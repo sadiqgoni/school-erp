@@ -76,7 +76,7 @@ class SchoolDivisionProvisioner
 
     protected static function provisionDivision(School $school, string $division): School
     {
-        return School::query()->firstOrCreate(
+        $divisionSchool = School::query()->firstOrCreate(
             [
                 'parent_school_id' => $school->getKey(),
                 'division' => $division,
@@ -102,6 +102,12 @@ class SchoolDivisionProvisioner
                 'slug' => "{$school->slug}-{$division}",
             ],
         );
+
+        if ($divisionSchool->wasRecentlyCreated) {
+            DirectAdminSubdomainProvisioner::ensure($divisionSchool->slug);
+        }
+
+        return $divisionSchool;
     }
 
     protected static function divisionCode(string $code, string $division): string

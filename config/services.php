@@ -59,6 +59,14 @@ return [
         'base_url' => env('MONNIFY_BASE_URL', 'https://sandbox.monnify.com'),
     ],
 
+    'directadmin' => [
+        'host' => env('DIRECTADMIN_HOST'),
+        'port' => env('DIRECTADMIN_PORT', 2222),
+        'username' => env('DIRECTADMIN_USERNAME'),
+        'login_key' => env('DIRECTADMIN_LOGIN_KEY'),
+        'domain' => env('CENTRAL_DOMAIN'),
+    ],
+
     'communications' => [
         'default_channels' => array_filter(explode(',', env('COMMUNICATION_CHANNELS', 'sms,email'))),
         'sms_provider' => env('SMS_PROVIDER'),
