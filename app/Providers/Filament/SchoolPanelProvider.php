@@ -10,6 +10,7 @@ use App\Filament\Widgets\SchoolDashboardSummary;
 use App\Filament\Widgets\SchoolWelcomeHero;
 use App\Filament\Widgets\TeacherDashboard;
 use App\Http\Middleware\EnsureActiveUser;
+use App\Http\Middleware\EnsureDivisionSelected;
 use App\Http\Middleware\EnsureSchoolAvailable;
 use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
@@ -37,7 +38,7 @@ class SchoolPanelProvider extends PanelProvider
         return $panel
             ->id('school')
             ->path('portal')
-            ->tenantDomain('{tenant}.'.config('app.central_domain'))
+            ->tenantDomain('{tenant:slug}.'.config('app.central_domain'))
             ->brandName('School Dice')
             ->brandLogo(asset('images/branding/school-dice-logo-ful.png'))
             ->brandLogoHeight('75px')
@@ -111,6 +112,7 @@ class SchoolPanelProvider extends PanelProvider
             // authMiddleware. Tenant-dependent checks must live here, not above.
             ->tenantMiddleware([
                 EnsureSchoolAvailable::class,
+                EnsureDivisionSelected::class,
             ], isPersistent: true);
     }
 }
