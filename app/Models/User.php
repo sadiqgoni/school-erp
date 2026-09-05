@@ -47,14 +47,15 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
     protected static function booted(): void
     {
         static::creating(function (self $user): void {
+            // Only carries forward an already-explicit superadmin flag/role
+            // (e.g. from App\Filament\Pages\Auth\Register, which is the only
+            // place that should ever grant this). Must not also promote
+            // "the first user created" in general — every user-creation path
+            // in the app (parent signup, guardian creation, staff creation,
+            // seeders...) creates rows, and whichever happened to run first
+            // against an empty table would otherwise get superadmin by
+            // accident.
             if ($user->isSuperAdmin()) {
-                $user->role = self::ROLE_SUPERADMIN;
-                $user->is_platform_admin = true;
-
-                return;
-            }
-
-            if (self::query()->doesntExist()) {
                 $user->role = self::ROLE_SUPERADMIN;
                 $user->is_platform_admin = true;
             }
