@@ -43,6 +43,7 @@ class SchoolPanelProvider extends PanelProvider
             ->brandLogoHeight('75px')
             ->login(SplitLogin::class)
             ->passwordReset(RequestPasswordReset::class)
+            ->profile()
             ->spa()
             ->colors([
                 'primary' => Color::Teal,

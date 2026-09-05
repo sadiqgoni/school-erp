@@ -96,7 +96,7 @@ class AdminPanelSmokeTest extends TestCase
         $this
             ->actingAs($schoolAdmin)
             ->get($this->portalUrl($tenantSlug, '/profile'))
-            ->assertNotFound();
+            ->assertOk();
 
         $this
             ->actingAs($schoolAdmin)
