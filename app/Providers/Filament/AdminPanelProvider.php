@@ -38,7 +38,6 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->domain(config('app.central_domain'))
             ->login(SplitLogin::class)
             ->path('admin')
             ->brandName('School Dice Admin')
